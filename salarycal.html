@@ -151,7 +151,7 @@
                             <option value="270">4.5 Hours</option>
                         </select>
                     </div>
-                    <div id="dailyMinutesContainer" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2 max-h-64 overflow-y-auto pr-2">
+                    <div id="dailyMinutesContainer" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2 pr-2">
                         <!-- JS will populate this -->
                     </div>
                      <div class="flex justify-between items-center mt-4 pt-2 border-t">
@@ -171,8 +171,8 @@
                             <span id="totalSalary" class="output-field">₹0.00</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="output-label">Active Days</span>
-                            <span id="activeDays" class="output-field">31</span>
+                            <span class="output-label">Office Days</span>
+                            <span id="officeDays" class="output-field">31</span>
                         </div>
                         <hr/>
                         <div class="flex justify-between items-center">
@@ -248,7 +248,7 @@
 
             const outputs = {
                 totalSalary: document.getElementById('totalSalary'),
-                activeDays: document.getElementById('activeDays'),
+                officeDays: document.getElementById('officeDays'),
                 payableDays: document.getElementById('payableDays'),
                 salaryPayable: document.getElementById('salaryPayable'),
                 finalAmountPayable: document.getElementById('finalAmountPayable'),
@@ -289,8 +289,8 @@
                 // Total Salary = Basic + Additional
                 const totalSalary = basicSalary + additionalPayout;
 
-                // Active Days = Month Days - Office Leave
-                const calculatedActiveDays = daysInMonth - officeLeave;
+                // Office Days = Present Days + Office Leave
+                const officeDays = presentDays + officeLeave;
 
                 // --- Calculate all penalties and credits ---
                 const totalShortMinutes = calculateTotalShortMinutes();
@@ -311,10 +311,10 @@
                 else if (presentDays >= 14) allowedLeaveCredit = 1;
                 inputs.allowedLeaveCredit.value = allowedLeaveCredit;
 
-                // --- Calculate Bonus Applicable Days (for bonus check) ---
+                // --- Calculate Bonus Applicable Days (for bonus check only) ---
                 const totalDeductions = shortDurationPenaltyDays + lateInLeaveDeductionDays + continuousLatePenalty + noInformLeavePenalty;
-                const bonusApplicableDays = calculatedActiveDays - totalDeductions;
-                
+                const bonusApplicableDays = officeDays - totalDeductions;
+
                 // --- Calculate Final Payable Days ---
                 let payableDays = bonusApplicableDays + allowedLeaveCredit;
 
@@ -330,9 +330,10 @@
                 const perDaySalary = daysInMonth > 0 ? totalSalary / daysInMonth : 0;
                 const salaryPayable = perDaySalary * payableDays;
                 
-                // --- Auto-calculate Bonuses based on Bonus Applicable Days ---
-                const dayDifference = calculatedActiveDays - bonusApplicableDays;
-                const noLeaveBonusValue = (dayDifference <= 1 && calculatedActiveDays > 0) ? 500 * bonusScale : 0;
+                // --- Auto-calculate Bonuses ---
+                // No Leave Bonus: If difference between Month Days and Bonus Applicable Days is less than 1.49
+                const dayDifferenceForBonus = daysInMonth - bonusApplicableDays;
+                const noLeaveBonusValue = (dayDifferenceForBonus < 1.49 && officeDays > 0) ? 500 * bonusScale : 0;
                 inputs.noLeaveBonus.value = formatCurrency(noLeaveBonusValue);
                 
                 const noLateInBonusValue = (lateIns <= 3) ? 400 * bonusScale : 0;
@@ -343,7 +344,7 @@
 
                 // 3. Update the UI
                 outputs.totalSalary.textContent = formatCurrency(totalSalary);
-                outputs.activeDays.textContent = calculatedActiveDays;
+                outputs.officeDays.textContent = officeDays.toFixed(2);
                 
                 // Update summary breakdown
                 outputs.summaryShortDuration.textContent = `-${shortDurationPenaltyDays.toFixed(2)}`;
