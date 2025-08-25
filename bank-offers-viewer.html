@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Offers Viewer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .card-columns {
+            column-count: 1;
+        }
+
+        @media (min-width: 576px) {
+            .card-columns {
+                column-count: 2;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .card-columns {
+                column-count: 4;
+            }
+        }
+
+        .card {
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .filter-bar {
+            max-width: 900px;
+            margin: 0 auto 1.5rem;
+        }
+
+        #pagination {
+            margin: 2rem 0 1rem;
+        }
+
+        #pagination ul.pagination {
+            flex-wrap: wrap;
+        }
+
+        #pagination .page-link {
+            min-width: 80px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4">
+        <h1 class="text-center mb-4">Bank Offers Viewer</h1>
+        <div class="text-center mb-4">
+            <input type="file" id="csvFile" accept=".csv" class="form-control-file d-inline-block"
+                style="max-width:300px;">
+        </div>
+        <div class="filter-bar row mb-3">
+            <div class="col-md-3 mb-2">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search by Name or Type...">
+            </div>
+            <div class="col-md-3 mb-2">
+                <select id="typeSelect" class="form-control">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-2">
+                <select id="storeFilter" class="form-control">
+                    <option value="">All Stores</option>
+                    <option value="1">Amazon</option>
+                    <option value="2">Flipkart</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-2">
+                <div class="input-group">
+                    <select id="sortSelect" class="form-control">
+                        <option value="name">Sort by Name</option>
+                        <option value="code">Sort by Code</option>
+                        <option value="store">Sort by Store</option>
+                        <option value="type">Sort by Type</option>
+                        <option value="AddedOn">Sort by AddedOn</option>
+                        <option value="UsedOn">Sort by UsedOn</option>
+                    </select>
+                    <div class="input-group-append">
+                        <select id="sortOrder" class="form-control">
+                            <option value="asc">Asc</option>
+                            <option value="desc">Desc</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav id="pagination" aria-label="Page navigation" class="d-none">
+            <ul class="pagination justify-content-center"></ul>
+        </nav>
+        <div id="cardContainer" class="card-columns"></div>
+    </div>
+    <script>
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            const headers = lines[0].split(',');
+            return lines.slice(1).map(line => {
+                const values = [];
+                let cur = '', inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') inQuotes = !inQuotes;
+                    else if (char === ',' && !inQuotes) { values.push(cur); cur = ''; }
+                    else cur += char;
+                }
+                values.push(cur);
+                const obj = {};
+                headers.forEach((h, i) => obj[h.trim()] = (values[i] || '').replace(/^"|"$/g, ''));
+                return obj;
+            });
+        }
+
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const pageSize = 24;
+
+        function renderCardsPage(data, page) {
+            const container = document.getElementById('cardContainer');
+            if (!data.length) {
+                container.innerHTML = '<div class="text-center text-muted">No results found.</div>';
+                document.getElementById('pagination').classList.add('d-none');
+                return;
+            }
+            const start = (page - 1) * pageSize;
+            const end = Math.min(start + pageSize, data.length);
+            const pageData = data.slice(start, end);
+            container.innerHTML = pageData.map(row => {
+                const code = row.Code || '';
+                const store = row.Store ? row.Store.trim() : '';
+                let offerLinkHtml = '';
+                if (code && store === '1') {
+                    // Amazon only
+                    const amazonUrl = `https://www.amazon.in/promotion/psp/${code}?ref=psp_pc_atc`;
+                    offerLinkHtml = `<a href="${amazonUrl}" target="_blank" class="btn btn-sm btn-warning mb-1" style="color:#222;background:#ffd700;border:none;">Amazon Offer</a>`;
+                } else if (code && store === '2') {
+                    // Flipkart only
+                    const flipkartUrl = `https://www.flipkart.com/all/pr?sid=all&offer=${code}`;
+                    offerLinkHtml = `<a href="${flipkartUrl}" target="_blank" class="btn btn-sm btn-primary mr-2 mb-1">Flipkart Offer</a>`;
+                }
+                return `
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-2">${row.Name || '-'}</h5>
+                    <div class="mb-1"><strong>Code:</strong> ${code || '-'}</div>
+                    <div class="mb-1"><strong>Store:</strong> ${row.Store || '-'}</div>
+                    <div class="mb-1"><strong>Type:</strong> ${row.Type || '-'}</div>
+                    <div class="mt-2 d-flex flex-wrap">
+                        ${offerLinkHtml}
+                    </div>
+                </div>
+            </div>
+            `;
+            }).join('');
+            renderPagination(data.length, page);
+        }
+
+        function renderPagination(total, page) {
+            const nav = document.getElementById('pagination');
+            const ul = nav.querySelector('ul');
+            const pageCount = Math.ceil(total / pageSize);
+            if (pageCount <= 1) { nav.classList.add('d-none'); return; }
+            nav.classList.remove('d-none');
+            ul.innerHTML = '';
+            const prevLi = document.createElement('li');
+            prevLi.className = 'page-item' + (page === 1 ? ' disabled' : '');
+            const prevA = document.createElement('a');
+            prevA.className = 'page-link';
+            prevA.href = '#';
+            prevA.textContent = 'Previous';
+            prevA.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (page > 1) {
+                    currentPage = page - 1;
+                    renderCardsPage(filteredData, currentPage);
+                }
+            });
+            prevLi.appendChild(prevA);
+            ul.appendChild(prevLi);
+            let startPage = Math.max(1, page - 2);
+            let endPage = Math.min(pageCount, page + 2);
+            if (endPage - startPage < 4) {
+                if (startPage === 1) endPage = Math.min(pageCount, startPage + 4);
+                else if (endPage === pageCount) startPage = Math.max(1, endPage - 4);
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = 'page-item' + (i === page ? ' active' : '');
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = '#';
+                a.textContent = i;
+                a.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    currentPage = i;
+                    renderCardsPage(filteredData, currentPage);
+                });
+                li.appendChild(a);
+                ul.appendChild(li);
+            }
+            const nextLi = document.createElement('li');
+            nextLi.className = 'page-item' + (page === pageCount ? ' disabled' : '');
+            const nextA = document.createElement('a');
+            nextA.className = 'page-link';
+            nextA.href = '#';
+            nextA.textContent = 'Next';
+            nextA.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (page < pageCount) {
+                    currentPage = page + 1;
+                    renderCardsPage(filteredData, currentPage);
+                }
+            });
+            nextLi.appendChild(nextA);
+            ul.appendChild(nextLi);
+        }
+
+        function populateTypeSelect() {
+            const select = document.getElementById('typeSelect');
+            if (!select) return;
+            const types = Array.from(new Set(allData.map(row => row.Type).filter(Boolean)));
+            select.innerHTML = '<option value="">All Types</option>' + types.map(type => `<option value="${type}">${type}</option>`).join('');
+        }
+
+        function getFilteredAndSearchedData() {
+            let data = allData;
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            const typeSelect = document.getElementById('typeSelect');
+            const selectedType = typeSelect ? typeSelect.value : '';
+            const storeFilter = document.getElementById('storeFilter');
+            const selectedStore = storeFilter ? storeFilter.value : '';
+            if (selectedType) data = data.filter(row => (row.Type || '').toLowerCase() === selectedType.toLowerCase());
+            if (selectedStore) data = data.filter(row => (row.Store || '').toString().trim() === selectedStore);
+            if (q) {
+                let isRegex = false;
+                let regex = null;
+                // If input starts and ends with /, treat as regex
+                if (q.length > 2 && q.startsWith('/') && q.endsWith('/')) {
+                    try {
+                        regex = new RegExp(q.slice(1, -1), 'i');
+                        isRegex = true;
+                    } catch (e) {
+                        // Invalid regex, fallback to normal search
+                        isRegex = false;
+                    }
+                }
+                if (isRegex && regex) {
+                    data = data.filter(row =>
+                        regex.test(row.Name || '') ||
+                        regex.test(row.Type || '')
+                    );
+                } else {
+                    data = data.filter(row =>
+                        (row.Name || '').toLowerCase().includes(q) ||
+                        (row.Type || '').toLowerCase().includes(q)
+                    );
+                }
+            }
+            // Sorting
+            const sortSelect = document.getElementById('sortSelect');
+            const sortOrder = document.getElementById('sortOrder');
+            if (sortSelect) {
+                const sortVal = sortSelect.value;
+                const order = sortOrder ? sortOrder.value : 'asc';
+                data = data.slice();
+                let compareFn;
+                if (sortVal === 'name') {
+                    compareFn = (a, b) => (a.Name || '').localeCompare(b.Name || '');
+                } else if (sortVal === 'code') {
+                    compareFn = (a, b) => (a.Code || '').localeCompare(b.Code || '');
+                } else if (sortVal === 'store') {
+                    compareFn = (a, b) => (a.Store || '').localeCompare(b.Store || '');
+                } else if (sortVal === 'type') {
+                    compareFn = (a, b) => (a.Type || '').localeCompare(b.Type || '');
+                } else if (sortVal === 'AddedOn') {
+                    compareFn = (a, b) => {
+                        const d1 = Date.parse(a.AddedOn || '') || 0;
+                        const d2 = Date.parse(b.AddedOn || '') || 0;
+                        return d1 - d2;
+                    };
+                } else if (sortVal === 'UsedOn') {
+                    compareFn = (a, b) => {
+                        const d1 = Date.parse(a.UsedOn || '') || 0;
+                        const d2 = Date.parse(b.UsedOn || '') || 0;
+                        return d1 - d2;
+                    };
+                }
+                if (compareFn) {
+                    data.sort((a, b) => order === 'asc' ? compareFn(a, b) : compareFn(b, a));
+                }
+            }
+            return data;
+        }
+
+        function applyFilters() {
+            filteredData = getFilteredAndSearchedData();
+            currentPage = 1;
+            renderCardsPage(filteredData, currentPage);
+        }
+
+        document.getElementById('csvFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                allData = parseCSV(evt.target.result);
+                filteredData = allData;
+                currentPage = 1;
+                populateTypeSelect();
+                renderCardsPage(filteredData, currentPage);
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('typeSelect').addEventListener('change', applyFilters);
+        document.getElementById('sortSelect').addEventListener('change', applyFilters);
+        document.getElementById('sortOrder').addEventListener('change', applyFilters);
+        document.getElementById('storeFilter').addEventListener('change', applyFilters);
+    </script>
+</body>
+
+</html>
