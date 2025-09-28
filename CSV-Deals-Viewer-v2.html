@@ -188,6 +188,8 @@
                     <option value="average-desc">Average ↓</option>
                     <option value="avg-price-diff-desc">Avg - Price ↓</option>
                     <option value="avg-price-diff-asc">Avg - Price ↑</option>
+                    <option value="avg-price-diff-pct-desc">Avg - Price % ↓</option>
+                    <option value="avg-price-diff-pct-asc">Avg - Price % ↑</option>
                 </select>
             </div>
             <div class="col-md-3 mb-2 d-flex align-items-center">
@@ -509,6 +511,18 @@
                         const diffA = (parseFloat(a.Average) || 0) - (parseFloat(a.Price) || 0);
                         const diffB = (parseFloat(b.Average) || 0) - (parseFloat(b.Price) || 0);
                         return diffA - diffB;
+                    });
+                } else if (sortVal === 'avg-price-diff-pct-desc') {
+                    data = data.slice().sort((a, b) => {
+                        const pctA = (parseFloat(a.Price) ? ((parseFloat(a.Average) - parseFloat(a.Price)) / parseFloat(a.Price)) * 100 : -Infinity);
+                        const pctB = (parseFloat(b.Price) ? ((parseFloat(b.Average) - parseFloat(b.Price)) / parseFloat(b.Price)) * 100 : -Infinity);
+                        return pctB - pctA;
+                    });
+                } else if (sortVal === 'avg-price-diff-pct-asc') {
+                    data = data.slice().sort((a, b) => {
+                        const pctA = (parseFloat(a.Price) ? ((parseFloat(a.Average) - parseFloat(a.Price)) / parseFloat(a.Price)) * 100 : Infinity);
+                        const pctB = (parseFloat(b.Price) ? ((parseFloat(b.Average) - parseFloat(b.Price)) / parseFloat(b.Price)) * 100 : Infinity);
+                        return pctA - pctB;
                     });
                 }
                 // default: no sort
