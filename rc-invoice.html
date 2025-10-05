@@ -1,279 +1,689 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invoice Generator</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<style>
-  body {
-    font-family: 'Arial', sans-serif;
-    background: #f5f7fa;
-    padding: 20px;
-    color: #333;
-  }
-  h2 {
-    text-align: center;
-  }
-  form {
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-  label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  input, textarea {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-  }
-  th {
-    background: #0a2e6c;
-    color: #fff;
-  }
-  /* Invoice Layout */
-  #invoice {
-    background: #fff;
-    width: 210mm;
-    min-height: 297mm;
-    padding: 20mm;
-    box-sizing: border-box;
-    margin: auto;
-    border-radius: 10px;
-  }
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
-    border-bottom: 3px solid #0a2e6c;
-    padding-bottom: 10px;
-  }
-  .header h1 {
-    color: #0a2e6c;
-    margin: 0;
-  }
-  .billfrom {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-  }
-  .billto, .from {
-    width: 48%;
-  }
-  .from {
-    text-align: right;
-  }
-  .section {
-    margin-top: 20px;
-  }
-  .footer {
-    text-align: right;
-    margin-top: 20px;
-    font-weight: bold;
-  }
-  .sign {
-    margin-top: 50px;
-    text-align: right;
-  }
-  .thankyou {
-    text-align: center;
-    font-size: 20px;
-    font-weight: bold;
-    color: #0a2e6c;
-    margin-top: 30px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .preview-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .invoice-particulars {
+            margin-top: 20px;
+        }
+        
+        .particular-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .particular-row input {
+            flex: 1;
+        }
+        
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .invoice-preview {
+            background: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+            min-height: 800px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .invoice-header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .from-to {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .from, .to {
+            width: 48%;
+        }
+        
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .invoice-table th {
+            background-color: #f2f6fc;
+            font-weight: 600;
+        }
+        
+        .totals {
+            text-align: right;
+            margin-bottom: 30px;
+        }
+        
+        .amount-words {
+            margin-top: 20px;
+            font-style: italic;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .payment-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .signature-area {
+            margin-top: 50px;
+            text-align: right;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #333;
+            width: 200px;
+            margin-left: auto;
+            margin-top: 40px;
+            padding-top: 5px;
+            text-align: center;
+        }
+        
+        .note-section {
+            margin-top: 20px;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .invoice-preview, .invoice-preview * {
+                visibility: visible;
+            }
+            .invoice-preview {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+        
+        .add-row-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .add-row-btn:hover {
+            background-color: #219653;
+        }
+    </style>
 </head>
 <body>
-
-<h2>Freelancer Invoice Generator</h2>
-
-<form id="invoiceForm">
-  <label>Invoice Issuer Name:</label>
-  <input type="text" id="issuerName" required>
-
-  <label>Address:</label>
-  <textarea id="issuerAddress" required></textarea>
-
-  <label>PAN Card:</label>
-  <input type="text" id="pan" value="XXXXXXXXXX">
-
-  <label>Bank Name:</label>
-  <input type="text" id="bankName" required>
-
-  <label>Account Number:</label>
-  <input type="text" id="accountNumber" value="XXXXXXXXXXXX">
-
-  <label>IFSC Code:</label>
-  <input type="text" id="ifsc" value="XXXX0000000">
-
-  <label>Invoice Date:</label>
-  <input type="date" id="invoiceDate" required>
-
-  <label>Invoice Number:</label>
-  <input type="text" id="invoiceNumber" placeholder="Leave blank if not available">
-
-  <h3>Service Details</h3>
-  <table id="itemsTable">
-    <tr>
-      <th>Description</th>
-      <th>Qty</th>
-      <th>Price</th>
-      <th>Amount</th>
-    </tr>
-    <tr>
-      <td><input type="text" value="Online Content Writing for Month /2025" class="desc"></td>
-      <td><input type="number" value="1" class="qty"></td>
-      <td><input type="number" value="0" class="price"></td>
-      <td><input type="number" value="0" class="amount" readonly></td>
-    </tr>
-  </table>
-  <button type="button" onclick="addRow()">+ Add Row</button>
-  <br><br>
-  <button type="button" onclick="generateInvoice()">Generate Invoice PDF</button>
-</form>
-
-<!-- Hidden Invoice Template -->
-<div id="invoice" style="display:none;">
-  <div class="header">
-    <h1>INVOICE</h1>
-    <p><strong>Invoice No:</strong> <span id="showInvoiceNumber"></span> &nbsp;&nbsp; | &nbsp;&nbsp;
-    <strong>Date:</strong> <span id="showInvoiceDate"></span></p>
-  </div>
-
-  <div class="billfrom">
-    <div class="billto">
-      <strong>Bill To:</strong><br>
-      Redcoupons Private Limited<br>
-      Ward No. 29, Pani Tanki Ke Pass,<br>
-      Nokha, Bikaner, Nokha, Rajasthan, India, 334803<br>
-      <strong>CIN:</strong> U73100RJ2024PTC098563
+    <div class="container">
+        <h1>Invoice Generator for Freelancers</h1>
+        
+        <div class="form-section">
+            <h2>Invoice Details</h2>
+            
+            <div class="form-group">
+                <label for="issuerName">Your Name</label>
+                <input type="text" id="issuerName" placeholder="Enter your name">
+            </div>
+            
+            <div class="form-group">
+                <label for="issuerAddress">Your Address</label>
+                <textarea id="issuerAddress" rows="3" placeholder="Enter your address"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="panCard">PAN Card Number</label>
+                <input type="text" id="panCard" placeholder="Enter PAN card number">
+            </div>
+            
+            <div class="form-group">
+                <label for="bankName">Bank Name</label>
+                <input type="text" id="bankName" placeholder="Enter bank name">
+            </div>
+            
+            <div class="form-group">
+                <label for="accountNumber">Account Number</label>
+                <input type="text" id="accountNumber" placeholder="Enter account number">
+            </div>
+            
+            <div class="form-group">
+                <label for="ifscCode">IFSC Code</label>
+                <input type="text" id="ifscCode" placeholder="Enter IFSC code">
+            </div>
+            
+            <div class="form-group">
+                <label for="invoiceDate">Invoice Date</label>
+                <input type="date" id="invoiceDate">
+            </div>
+            
+            <div class="form-group">
+                <label for="invoiceNumber">Invoice Number</label>
+                <input type="text" id="invoiceNumber" placeholder="Enter invoice number">
+            </div>
+            
+            <h2>Invoice Particulars</h2>
+            <div class="invoice-particulars">
+                <div class="particular-row">
+                    <input type="text" class="particular-desc" placeholder="Description" value="Online Content Writing for Month /2025">
+                    <input type="number" class="particular-qty" placeholder="Qty" value="1" min="1">
+                    <input type="number" class="particular-price" placeholder="Price" value="0" min="0" step="0.01">
+                    <input type="text" class="particular-amount" placeholder="Amount" readonly>
+                </div>
+                <div id="particulars-container">
+                    <!-- Additional rows will be added here -->
+                </div>
+                <button type="button" class="add-row-btn" id="add-row">Add Another Item</button>
+            </div>
+            
+            <button class="btn" id="generate-pdf">Generate Invoice PDF</button>
+        </div>
+        
+        <div class="preview-section">
+            <h2>Invoice Preview</h2>
+            <div class="invoice-preview" id="invoice-preview">
+                <div class="invoice-header">
+                    <h1>INVOICE</h1>
+                    <p><strong>NO:</strong> <span id="preview-invoice-number">INV-</span></p>
+                </div>
+                
+                <div class="from-to">
+                    <div class="from">
+                        <h3>From:</h3>
+                        <p id="preview-issuer-name">Your Name</p>
+                        <p id="preview-issuer-address">Your Address</p>
+                        <p><strong>PAN:</strong> <span id="preview-pan">PAN Number</span></p>
+                    </div>
+                    
+                    <div class="to">
+                        <h3>Bill To:</h3>
+                        <p>Redcoupons Private Limited</p>
+                        <p>Ward No. 29, Pani Tanki Ke Pass, Nokha, Bikaner, Nokha, Rajasthan, India, 334803</p>
+                        <p><strong>CIN:</strong> U73100RJ2024PTC098563</p>
+                    </div>
+                </div>
+                
+                <div class="invoice-details">
+                    <div>
+                        <p><strong>Date:</strong> <span id="preview-invoice-date">Date</span></p>
+                    </div>
+                </div>
+                
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-particulars">
+                        <tr>
+                            <td>Online Content Writing for Month /2025</td>
+                            <td>1</td>
+                            <td>$ 0.00</td>
+                            <td>$ 0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="totals">
+                    <p><strong>Sub Total:</strong> $ <span id="preview-subtotal">0.00</span></p>
+                    <p><strong>Total Amount:</strong> $ <span id="preview-total">0.00</span></p>
+                </div>
+                
+                <div class="amount-words">
+                    <p><strong>Amount in Words:</strong> <span id="preview-amount-words">Zero dollars</span></p>
+                </div>
+                
+                <div class="note-section">
+                    <h3>Note:</h3>
+                    <p>________________________________________________________________</p>
+                    <p>________________________________________________________________</p>
+                </div>
+                
+                <div class="payment-info">
+                    <h3>Payment Information:</h3>
+                    <p><strong>Bank:</strong> <span id="preview-bank-name">Bank Name</span></p>
+                    <p><strong>Account No:</strong> <span id="preview-account-number">Account Number</span></p>
+                    <p><strong>IFSC Code:</strong> <span id="preview-ifsc">IFSC Code</span></p>
+                </div>
+                
+                <div class="signature-area">
+                    <p>For <span id="preview-company-name">Your Name</span></p>
+                    <div class="signature-line">
+                        Authorized Signature
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="from">
-      <strong>From:</strong><br>
-      <span id="showIssuerName"></span><br>
-      <span id="showIssuerAddress"></span><br>
-      PAN: <span id="showPAN"></span>
-    </div>
-  </div>
 
-  <div class="section">
-    <table id="invoiceTable"></table>
-  </div>
-
-  <div class="footer">
-    Total Amount: ₹<span id="totalAmount"></span><br>
-    Amount in Words: <span id="amountWords"></span>
-  </div>
-
-  <div class="section">
-    <strong>Bank Details:</strong><br>
-    Bank Name: <span id="showBankName"></span><br>
-    Account Number: <span id="showAccountNumber"></span><br>
-    IFSC Code: <span id="showIFSC"></span>
-  </div>
-
-  <div class="sign">
-    __________________________<br>
-    Signature of Issuer
-  </div>
-
-  <div class="thankyou">Thank You!</div>
-</div>
-
-<script>
-function addRow() {
-  const table = document.getElementById("itemsTable");
-  const row = table.insertRow();
-  row.innerHTML = `
-    <td><input type="text" class="desc"></td>
-    <td><input type="number" value="1" class="qty"></td>
-    <td><input type="number" value="0" class="price"></td>
-    <td><input type="number" value="0" class="amount" readonly></td>`;
-}
-
-function numberToWords(num) {
-  const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
-  const b = ['','', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-  if ((num = num.toString()).length > 9) return 'Overflow';
-  let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-  if (!n) return;
-  let str = '';
-  str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + ' Crore ' : '';
-  str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + ' Lakh ' : '';
-  str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + ' Thousand ' : '';
-  str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + ' Hundred ' : '';
-  str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + ' ' : '';
-  return str + 'Rupees Only';
-}
-
-function generateInvoice() {
-  const issuerName = document.getElementById("issuerName").value;
-  const issuerAddress = document.getElementById("issuerAddress").value;
-  const pan = document.getElementById("pan").value;
-  const bankName = document.getElementById("bankName").value;
-  const accountNumber = document.getElementById("accountNumber").value;
-  const ifsc = document.getElementById("ifsc").value;
-  const invoiceDate = document.getElementById("invoiceDate").value;
-  const invoiceNumber = document.getElementById("invoiceNumber").value;
-
-  let total = 0;
-  let invoiceTable = `<tr><th>Description</th><th>Qty</th><th>Price</th><th>Amount</th></tr>`;
-  document.querySelectorAll("#itemsTable tr").forEach((row, index) => {
-    if (index === 0) return;
-    const desc = row.querySelector(".desc").value;
-    const qty = parseFloat(row.querySelector(".qty").value);
-    const price = parseFloat(row.querySelector(".price").value);
-    const amount = qty * price;
-    row.querySelector(".amount").value = amount.toFixed(2);
-    total += amount;
-    invoiceTable += `<tr><td>${desc}</td><td>${qty}</td><td>₹${price.toFixed(2)}</td><td>₹${amount.toFixed(2)}</td></tr>`;
-  });
-
-  document.getElementById("showIssuerName").innerText = issuerName;
-  document.getElementById("showIssuerAddress").innerText = issuerAddress;
-  document.getElementById("showPAN").innerText = pan;
-  document.getElementById("showBankName").innerText = bankName;
-  document.getElementById("showAccountNumber").innerText = accountNumber;
-  document.getElementById("showIFSC").innerText = ifsc;
-  document.getElementById("showInvoiceDate").innerText = invoiceDate;
-  document.getElementById("showInvoiceNumber").innerText = invoiceNumber;
-  document.getElementById("invoiceTable").innerHTML = invoiceTable;
-  document.getElementById("totalAmount").innerText = total.toFixed(2);
-  document.getElementById("amountWords").innerText = numberToWords(Math.round(total));
-
-  const invoice = document.getElementById("invoice");
-  invoice.style.display = "block";
-
-  const opt = {
-    margin: [15, 15, 15, 15], // Top, Left, Bottom, Right margin in mm
-    filename: `Invoice-${invoiceNumber || 'Redcoupons'}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  html2pdf().from(invoice).set(opt).save().then(() => {
-    invoice.style.display = "none";
-  });
-}
-</script>
-
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default date to today
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('invoiceDate').value = formattedDate;
+            
+            // Update preview when inputs change
+            document.getElementById('issuerName').addEventListener('input', updatePreview);
+            document.getElementById('issuerAddress').addEventListener('input', updatePreview);
+            document.getElementById('panCard').addEventListener('input', updatePreview);
+            document.getElementById('bankName').addEventListener('input', updatePreview);
+            document.getElementById('accountNumber').addEventListener('input', updatePreview);
+            document.getElementById('ifscCode').addEventListener('input', updatePreview);
+            document.getElementById('invoiceDate').addEventListener('input', updatePreview);
+            document.getElementById('invoiceNumber').addEventListener('input', updatePreview);
+            
+            // Add event listeners to existing particular inputs
+            document.querySelectorAll('.particular-desc, .particular-qty, .particular-price').forEach(input => {
+                input.addEventListener('input', updateParticularAmount);
+                input.addEventListener('input', updatePreview);
+            });
+            
+            // Add row button
+            document.getElementById('add-row').addEventListener('click', function() {
+                const container = document.getElementById('particulars-container');
+                const newRow = document.createElement('div');
+                newRow.className = 'particular-row';
+                newRow.innerHTML = `
+                    <input type="text" class="particular-desc" placeholder="Description">
+                    <input type="number" class="particular-qty" placeholder="Qty" value="1" min="1">
+                    <input type="number" class="particular-price" placeholder="Price" value="0" min="0" step="0.01">
+                    <input type="text" class="particular-amount" placeholder="Amount" readonly>
+                `;
+                container.appendChild(newRow);
+                
+                // Add event listeners to new inputs
+                newRow.querySelectorAll('.particular-desc, .particular-qty, .particular-price').forEach(input => {
+                    input.addEventListener('input', updateParticularAmount);
+                    input.addEventListener('input', updatePreview);
+                });
+            });
+            
+            // Generate PDF button
+            document.getElementById('generate-pdf').addEventListener('click', generatePDF);
+            
+            // Initial preview update
+            updatePreview();
+            
+            function updateParticularAmount(event) {
+                const row = event.target.closest('.particular-row');
+                const qty = parseFloat(row.querySelector('.particular-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.particular-price').value) || 0;
+                const amount = qty * price;
+                row.querySelector('.particular-amount').value = amount.toFixed(2);
+            }
+            
+            function updatePreview() {
+                // Update issuer details
+                document.getElementById('preview-issuer-name').textContent = document.getElementById('issuerName').value || 'Your Name';
+                document.getElementById('preview-issuer-address').textContent = document.getElementById('issuerAddress').value || 'Your Address';
+                document.getElementById('preview-pan').textContent = document.getElementById('panCard').value || 'PAN Number';
+                document.getElementById('preview-bank-name').textContent = document.getElementById('bankName').value || 'Bank Name';
+                document.getElementById('preview-account-number').textContent = document.getElementById('accountNumber').value || 'Account Number';
+                document.getElementById('preview-ifsc').textContent = document.getElementById('ifscCode').value || 'IFSC Code';
+                document.getElementById('preview-company-name').textContent = document.getElementById('issuerName').value || 'Your Name';
+                
+                // Update invoice details
+                const invoiceDate = document.getElementById('invoiceDate').value;
+                document.getElementById('preview-invoice-date').textContent = formatDate(invoiceDate) || 'Date';
+                
+                const invoiceNumber = document.getElementById('invoiceNumber').value;
+                document.getElementById('preview-invoice-number').textContent = invoiceNumber || 'INV-';
+                
+                // Update particulars table
+                const particularsTable = document.getElementById('preview-particulars');
+                particularsTable.innerHTML = '';
+                
+                let subtotal = 0;
+                
+                // Add rows from form
+                document.querySelectorAll('.particular-row').forEach(row => {
+                    const desc = row.querySelector('.particular-desc').value || 'Your Description';
+                    const qty = parseFloat(row.querySelector('.particular-qty').value) || 0;
+                    const price = parseFloat(row.querySelector('.particular-price').value) || 0;
+                    const amount = qty * price;
+                    subtotal += amount;
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${desc}</td>
+                        <td>${qty}</td>
+                        <td>$ ${price.toFixed(2)}</td>
+                        <td>$ ${amount.toFixed(2)}</td>
+                    `;
+                    particularsTable.appendChild(tr);
+                });
+                
+                // Update totals
+                document.getElementById('preview-subtotal').textContent = subtotal.toFixed(2);
+                document.getElementById('preview-total').textContent = subtotal.toFixed(2);
+                
+                // Update amount in words
+                document.getElementById('preview-amount-words').textContent = convertNumberToWords(subtotal);
+            }
+            
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            }
+            
+            function convertNumberToWords(num) {
+                if (num === 0) return 'Zero dollars';
+                
+                const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+                              'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+                const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+                
+                let words = '';
+                
+                // Handle dollars
+                const dollars = Math.floor(num);
+                const cents = Math.round((num - dollars) * 100);
+                
+                if (dollars === 0) {
+                    words = 'Zero';
+                } else if (dollars < 20) {
+                    words = ones[dollars];
+                } else if (dollars < 100) {
+                    words = tens[Math.floor(dollars / 10)];
+                    if (dollars % 10 > 0) {
+                        words += ' ' + ones[dollars % 10];
+                    }
+                } else if (dollars < 1000) {
+                    words = ones[Math.floor(dollars / 100)] + ' Hundred';
+                    if (dollars % 100 > 0) {
+                        words += ' and ' + convertNumberToWords(dollars % 100).toLowerCase();
+                    }
+                } else {
+                    words = 'Large amount';
+                }
+                
+                words += ' dollar' + (dollars === 1 ? '' : 's');
+                
+                // Handle cents
+                if (cents > 0) {
+                    words += ' and ' + cents + ' cent' + (cents === 1 ? '' : 's');
+                }
+                
+                return words;
+            }
+            
+            function generatePDF() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                // Set margins
+                const margin = 15;
+                let yPos = margin;
+                
+                // Add title
+                doc.setFontSize(20);
+                doc.text('INVOICE', 105, yPos, { align: 'center' });
+                yPos += 10;
+                
+                // Add invoice number
+                doc.setFontSize(12);
+                const invoiceNumber = document.getElementById('invoiceNumber').value || 'INV-';
+                doc.text(`NO: ${invoiceNumber}`, 105, yPos, { align: 'center' });
+                yPos += 15;
+                
+                // Add from and to sections
+                doc.setFontSize(14);
+                doc.text('From:', margin, yPos);
+                doc.text('Bill To:', 105, yPos);
+                yPos += 8;
+                
+                doc.setFontSize(10);
+                const issuerName = document.getElementById('issuerName').value || 'Your Name';
+                const issuerAddress = document.getElementById('issuerAddress').value || 'Your Address';
+                const panCard = document.getElementById('panCard').value || 'PAN Number';
+                
+                // Split address into multiple lines if needed
+                const issuerAddressLines = doc.splitTextToSize(issuerAddress, 80);
+                doc.text(issuerName, margin, yPos);
+                yPos += 5;
+                doc.text(issuerAddressLines, margin, yPos);
+                yPos += issuerAddressLines.length * 5;
+                doc.text(`PAN: ${panCard}`, margin, yPos);
+                yPos -= (issuerAddressLines.length * 5) + 5; // Reset yPos for right column
+                
+                // Bill to details
+                const billToName = 'Redcoupons Private Limited';
+                const billToAddress = 'Ward No. 29, Pani Tanki Ke Pass, Nokha, Bikaner, Nokha, Rajasthan, India, 334803';
+                const billToCIN = 'CIN: U73100RJ2024PTC098563';
+                
+                const billToAddressLines = doc.splitTextToSize(billToAddress, 80);
+                doc.text(billToName, 105, yPos);
+                yPos += 5;
+                doc.text(billToAddressLines, 105, yPos);
+                yPos += billToAddressLines.length * 5;
+                doc.text(billToCIN, 105, yPos);
+                yPos += 10;
+                
+                // Add invoice date
+                const invoiceDate = document.getElementById('invoiceDate').value;
+                const formattedDate = invoiceDate ? formatDate(invoiceDate) : 'Date';
+                doc.text(`Date: ${formattedDate}`, margin, yPos);
+                yPos += 15;
+                
+                // Add table headers
+                doc.setFillColor(240, 240, 240);
+                doc.rect(margin, yPos, 165, 8, 'F');
+                doc.setFontSize(10);
+                doc.text('Description', margin + 2, yPos + 5);
+                doc.text('Qty', margin + 100, yPos + 5);
+                doc.text('Price', margin + 120, yPos + 5);
+                doc.text('Total', margin + 150, yPos + 5);
+                yPos += 8;
+                
+                // Add table rows
+                let subtotal = 0;
+                
+                document.querySelectorAll('.particular-row').forEach(row => {
+                    const desc = row.querySelector('.particular-desc').value || 'Your Description';
+                    const qty = parseFloat(row.querySelector('.particular-qty').value) || 0;
+                    const price = parseFloat(row.querySelector('.particular-price').value) || 0;
+                    const amount = qty * price;
+                    subtotal += amount;
+                    
+                    // Split description into multiple lines if needed
+                    const descLines = doc.splitTextToSize(desc, 80);
+                    
+                    // Calculate row height based on description lines
+                    const rowHeight = Math.max(descLines.length * 5, 8);
+                    
+                    // Draw row
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(margin, yPos, margin + 165, yPos); // Top line
+                    doc.line(margin, yPos + rowHeight, margin + 165, yPos + rowHeight); // Bottom line
+                    doc.line(margin, yPos, margin, yPos + rowHeight); // Left line
+                    doc.line(margin + 100, yPos, margin + 100, yPos + rowHeight); // Qty line
+                    doc.line(margin + 120, yPos, margin + 120, yPos + rowHeight); // Price line
+                    doc.line(margin + 150, yPos, margin + 150, yPos + rowHeight); // Total line
+                    doc.line(margin + 165, yPos, margin + 165, yPos + rowHeight); // Right line
+                    
+                    // Add text
+                    doc.text(descLines, margin + 2, yPos + 5);
+                    doc.text(qty.toString(), margin + 102, yPos + 5, { align: 'right' });
+                    doc.text('$ ' + price.toFixed(2), margin + 122, yPos + 5, { align: 'right' });
+                    doc.text('$ ' + amount.toFixed(2), margin + 152, yPos + 5, { align: 'right' });
+                    
+                    yPos += rowHeight;
+                });
+                
+                yPos += 10;
+                
+                // Add totals
+                doc.text(`Sub Total: $ ${subtotal.toFixed(2)}`, margin + 120, yPos, { align: 'right' });
+                yPos += 7;
+                doc.text(`Total Amount: $ ${subtotal.toFixed(2)}`, margin + 120, yPos, { align: 'right' });
+                yPos += 10;
+                
+                // Add amount in words
+                const amountWords = convertNumberToWords(subtotal);
+                doc.text(`Amount in Words: ${amountWords}`, margin, yPos);
+                yPos += 15;
+                
+                // Add note section
+                doc.setFontSize(12);
+                doc.text('Note:', margin, yPos);
+                yPos += 7;
+                doc.line(margin, yPos, margin + 165, yPos);
+                yPos += 7;
+                doc.line(margin, yPos, margin + 165, yPos);
+                yPos += 10;
+                
+                // Add payment information
+                doc.setFontSize(12);
+                doc.text('Payment Information:', margin, yPos);
+                yPos += 7;
+                doc.setFontSize(10);
+                const bankName = document.getElementById('bankName').value || 'Bank Name';
+                const accountNumber = document.getElementById('accountNumber').value || 'Account Number';
+                const ifscCode = document.getElementById('ifscCode').value || 'IFSC Code';
+                
+                doc.text(`Bank: ${bankName}`, margin, yPos);
+                yPos += 5;
+                doc.text(`Account No: ${accountNumber}`, margin, yPos);
+                yPos += 5;
+                doc.text(`IFSC Code: ${ifscCode}`, margin, yPos);
+                yPos += 15;
+                
+                // Add signature area
+                doc.setFontSize(10);
+                doc.text(`For ${issuerName}`, margin + 120, yPos, { align: 'right' });
+                yPos += 20;
+                doc.line(margin + 100, yPos, margin + 165, yPos);
+                doc.text('Authorized Signature', margin + 132.5, yPos + 5, { align: 'center' });
+                
+                // Save the PDF
+                doc.save('Invoice.pdf');
+            }
+        });
+    </script>
 </body>
 </html>
