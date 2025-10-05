@@ -82,14 +82,37 @@
             margin-top: 20px;
         }
         
+        .particulars-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .particulars-header div {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .particulars-header div:first-child {
+            text-align: left;
+        }
+        
         .particular-row {
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
+            align-items: center;
         }
         
         .particular-row input {
             flex: 1;
+            text-align: center;
+        }
+        
+        .particular-row input:first-child {
+            text-align: left;
         }
         
         .btn {
@@ -232,6 +255,23 @@
         .rupee-symbol {
             font-family: Arial, sans-serif;
         }
+        
+        .delete-row {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .delete-row:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -283,11 +323,19 @@
             
             <h2>Invoice Particulars</h2>
             <div class="invoice-particulars">
+                <div class="particulars-header">
+                    <div>Description</div>
+                    <div>Qty</div>
+                    <div>Price</div>
+                    <div>Amount</div>
+                    <div style="width: 40px;"></div>
+                </div>
                 <div class="particular-row">
                     <input type="text" class="particular-desc" placeholder="Description" value="Online Content Writing for Month /2025">
                     <input type="number" class="particular-qty" placeholder="Qty" value="1" min="1">
                     <input type="number" class="particular-price" placeholder="Price" value="0" min="0" step="0.01">
                     <input type="text" class="particular-amount" placeholder="Amount" readonly>
+                    <button type="button" class="delete-row" disabled>×</button>
                 </div>
                 <div id="particulars-container">
                     <!-- Additional rows will be added here -->
@@ -331,29 +379,29 @@
                 <table class="invoice-table">
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th>Qty</th>
-                            <th>Price</th>
-                            <th>Total</th>
+                            <th width="50%">Description</th>
+                            <th width="15%">Qty</th>
+                            <th width="15%">Price</th>
+                            <th width="20%">Total</th>
                         </tr>
                     </thead>
                     <tbody id="preview-particulars">
                         <tr>
                             <td>Online Content Writing for Month /2025</td>
                             <td>1</td>
-                            <td><span class="rupee-symbol">₹</span> 0.00</td>
-                            <td><span class="rupee-symbol">₹</span> 0.00</td>
+                            <td>₹ 0.00</td>
+                            <td>₹ 0.00</td>
                         </tr>
                     </tbody>
                 </table>
                 
                 <div class="totals">
-                    <p><strong>Sub Total:</strong> <span class="rupee-symbol">₹</span> <span id="preview-subtotal">0.00</span></p>
-                    <p><strong>Total Amount:</strong> <span class="rupee-symbol">₹</span> <span id="preview-total">0.00</span></p>
+                    <p><strong>Sub Total:</strong> ₹ <span id="preview-subtotal">0.00</span></p>
+                    <p><strong>Total Amount:</strong> ₹ <span id="preview-total">0.00</span></p>
                 </div>
                 
                 <div class="amount-words">
-                    <p><strong>Amount in Words:</strong> <span id="preview-amount-words">Zero rupees</span></p>
+                    <p><strong>Amount in Words:</strong> <span id="preview-amount-words">Zero rupees only</span></p>
                 </div>
                 
                 <div class="note-section">
@@ -412,6 +460,7 @@
                     <input type="number" class="particular-qty" placeholder="Qty" value="1" min="1">
                     <input type="number" class="particular-price" placeholder="Price" value="0" min="0" step="0.01">
                     <input type="text" class="particular-amount" placeholder="Amount" readonly>
+                    <button type="button" class="delete-row">×</button>
                 `;
                 container.appendChild(newRow);
                 
@@ -419,6 +468,12 @@
                 newRow.querySelectorAll('.particular-desc, .particular-qty, .particular-price').forEach(input => {
                     input.addEventListener('input', updateParticularAmount);
                     input.addEventListener('input', updatePreview);
+                });
+                
+                // Add event listener to delete button
+                newRow.querySelector('.delete-row').addEventListener('click', function() {
+                    newRow.remove();
+                    updatePreview();
                 });
             });
             
@@ -471,8 +526,8 @@
                     tr.innerHTML = `
                         <td>${desc}</td>
                         <td>${qty}</td>
-                        <td><span class="rupee-symbol">₹</span> ${price.toFixed(2)}</td>
-                        <td><span class="rupee-symbol">₹</span> ${amount.toFixed(2)}</td>
+                        <td>₹ ${price.toFixed(2)}</td>
+                        <td>₹ ${amount.toFixed(2)}</td>
                     `;
                     particularsTable.appendChild(tr);
                 });
@@ -654,8 +709,9 @@
                     // Add text
                     doc.text(descLines, margin + 2, yPos + 5);
                     doc.text(qty.toString(), margin + 102, yPos + 5, { align: 'right' });
-                    doc.text('₹ ' + price.toFixed(2), margin + 122, yPos + 5, { align: 'right' });
-                    doc.text('₹ ' + amount.toFixed(2), margin + 152, yPos + 5, { align: 'right' });
+                    // Use "Rs." instead of rupee symbol for better PDF compatibility
+                    doc.text('Rs. ' + price.toFixed(2), margin + 122, yPos + 5, { align: 'right' });
+                    doc.text('Rs. ' + amount.toFixed(2), margin + 152, yPos + 5, { align: 'right' });
                     
                     yPos += rowHeight;
                 });
@@ -663,9 +719,9 @@
                 yPos += 10;
                 
                 // Add totals
-                doc.text(`Sub Total: ₹ ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
+                doc.text(`Sub Total: Rs. ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
                 yPos += 7;
-                doc.text(`Total Amount: ₹ ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
+                doc.text(`Total Amount: Rs. ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
                 yPos += 10;
                 
                 // Add amount in words
