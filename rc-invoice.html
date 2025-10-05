@@ -84,12 +84,13 @@
         
         .particulars-header {
             display: grid;
-            grid-template-columns: 3fr 1fr 1fr 1fr 40px;
-            gap: 10px;
-            margin-bottom: 10px;
+            grid-template-columns: 3fr 80px 120px 120px 40px;
+            gap: 8px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #2c3e50;
-            padding: 0 5px;
+            padding: 0 2px;
+            font-size: 14px;
         }
         
         .particulars-header div {
@@ -102,20 +103,29 @@
         
         .particular-row {
             display: grid;
-            grid-template-columns: 3fr 1fr 1fr 1fr 40px;
-            gap: 10px;
-            margin-bottom: 10px;
+            grid-template-columns: 3fr 80px 120px 120px 40px;
+            gap: 8px;
+            margin-bottom: 8px;
             align-items: center;
         }
         
         .particular-row input {
             width: 100%;
-            text-align: center;
             padding: 8px;
+            font-size: 14px;
         }
         
-        .particular-row input:first-child {
-            text-align: left;
+        .particular-desc {
+            text-align: left !important;
+        }
+        
+        .particular-qty {
+            text-align: center;
+        }
+        
+        .particular-price, .particular-amount {
+            text-align: right;
+            font-family: 'Courier New', monospace;
         }
         
         .btn {
@@ -148,6 +158,8 @@
         .invoice-header {
             text-align: center;
             margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
         }
         
         .invoice-header h1 {
@@ -166,46 +178,79 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 30px;
+            gap: 20px;
         }
         
         .from, .to {
-            width: 48%;
+            flex: 1;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
         }
         
         .invoice-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
-        }
-        
-        .invoice-table th, .invoice-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
+            font-size: 14px;
         }
         
         .invoice-table th {
-            background-color: #f2f6fc;
+            background-color: #2c3e50;
+            color: white;
             font-weight: 600;
+            padding: 12px 8px;
+            text-align: left;
+            border: 1px solid #1a252f;
+        }
+        
+        .invoice-table td {
+            border: 1px solid #ddd;
+            padding: 10px 8px;
+            text-align: left;
+        }
+        
+        .invoice-table .desc-col {
+            width: 50%;
+        }
+        
+        .invoice-table .qty-col {
+            width: 15%;
+            text-align: center;
+        }
+        
+        .invoice-table .price-col {
+            width: 15%;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .invoice-table .amount-col {
+            width: 20%;
+            text-align: right;
+            font-family: 'Courier New', monospace;
         }
         
         .totals {
             text-align: right;
             margin-bottom: 30px;
+            font-size: 16px;
         }
         
         .amount-words {
             margin-top: 20px;
             font-style: italic;
-            padding: 10px;
-            background-color: #f9f9f9;
+            padding: 12px;
+            background-color: #f0f8ff;
             border-radius: 4px;
+            border-left: 4px solid #3498db;
         }
         
         .payment-info {
             margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
         }
         
         .signature-area {
@@ -215,7 +260,7 @@
         
         .signature-line {
             border-top: 1px solid #333;
-            width: 200px;
+            width: 250px;
             margin-left: auto;
             margin-top: 40px;
             padding-top: 5px;
@@ -224,6 +269,9 @@
         
         .note-section {
             margin-top: 20px;
+            padding: 15px;
+            background: #fff8e1;
+            border-radius: 5px;
         }
         
         @media print {
@@ -249,14 +297,11 @@
             border-radius: 4px;
             cursor: pointer;
             margin-top: 10px;
+            font-size: 14px;
         }
         
         .add-row-btn:hover {
             background-color: #219653;
-        }
-        
-        .rupee-symbol {
-            font-family: Arial, sans-serif;
         }
         
         .delete-row {
@@ -289,14 +334,26 @@
             transform: translateY(-50%);
             color: #666;
             z-index: 1;
+            font-weight: bold;
         }
         
         .price-input-container input, .amount-input-container input {
-            padding-left: 20px;
+            padding-left: 25px;
+            font-family: 'Courier New', monospace;
         }
         
         .amount-input-container input {
             background-color: #f9f9f9;
+            font-weight: bold;
+        }
+        
+        .currency-symbol {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+        
+        .monospace {
+            font-family: 'Courier New', monospace;
         }
     </style>
 </head>
@@ -358,7 +415,7 @@
                 </div>
                 <div class="particular-row">
                     <input type="text" class="particular-desc" placeholder="Description" value="Online Content Writing for Month /2025">
-                    <input type="number" class="particular-qty" placeholder="Qty" value="1" min="1">
+                    <input type="number" class="particular-qty" placeholder="1" value="1" min="1">
                     <div class="price-input-container">
                         <input type="number" class="particular-price" placeholder="0.00" value="0" min="0" step="0.01">
                     </div>
@@ -409,25 +466,25 @@
                 <table class="invoice-table">
                     <thead>
                         <tr>
-                            <th width="50%">Description</th>
-                            <th width="15%">Qty</th>
-                            <th width="15%">Price</th>
-                            <th width="20%">Total</th>
+                            <th class="desc-col">Description</th>
+                            <th class="qty-col">Qty</th>
+                            <th class="price-col">Price</th>
+                            <th class="amount-col">Total</th>
                         </tr>
                     </thead>
                     <tbody id="preview-particulars">
                         <tr>
                             <td>Online Content Writing for Month /2025</td>
-                            <td>1</td>
-                            <td>₹ 0.00</td>
-                            <td>₹ 0.00</td>
+                            <td class="qty-col">1</td>
+                            <td class="price-col"><span class="currency-symbol">₹</span> <span class="monospace">0.00</span></td>
+                            <td class="amount-col"><span class="currency-symbol">₹</span> <span class="monospace">0.00</span></td>
                         </tr>
                     </tbody>
                 </table>
                 
                 <div class="totals">
-                    <p><strong>Sub Total:</strong> ₹ <span id="preview-subtotal">0.00</span></p>
-                    <p><strong>Total Amount:</strong> ₹ <span id="preview-total">0.00</span></p>
+                    <p><strong>Sub Total:</strong> <span class="currency-symbol">₹</span> <span id="preview-subtotal" class="monospace">0.00</span></p>
+                    <p><strong>Total Amount:</strong> <span class="currency-symbol">₹</span> <span id="preview-total" class="monospace">0.00</span></p>
                 </div>
                 
                 <div class="amount-words">
@@ -487,7 +544,7 @@
                 newRow.className = 'particular-row';
                 newRow.innerHTML = `
                     <input type="text" class="particular-desc" placeholder="Description">
-                    <input type="number" class="particular-qty" placeholder="Qty" value="1" min="1">
+                    <input type="number" class="particular-qty" placeholder="1" value="1" min="1">
                     <div class="price-input-container">
                         <input type="number" class="particular-price" placeholder="0.00" value="0" min="0" step="0.01">
                     </div>
@@ -559,22 +616,16 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${desc}</td>
-                        <td>${qty}</td>
-                        <td>₹ ${price.toFixed(2)}</td>
-                        <td>₹ ${amount.toFixed(2)}</td>
+                        <td class="qty-col">${qty}</td>
+                        <td class="price-col"><span class="currency-symbol">₹</span> <span class="monospace">${formatCurrency(price)}</span></td>
+                        <td class="amount-col"><span class="currency-symbol">₹</span> <span class="monospace">${formatCurrency(amount)}</span></td>
                     `;
                     particularsTable.appendChild(tr);
                 });
                 
                 // Update totals
-                document.getElementById('preview-subtotal').textContent = subtotal.toLocaleString('en-IN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-                document.getElementById('preview-total').textContent = subtotal.toLocaleString('en-IN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
+                document.getElementById('preview-subtotal').textContent = formatCurrency(subtotal);
+                document.getElementById('preview-total').textContent = formatCurrency(subtotal);
                 
                 // Update amount in words
                 document.getElementById('preview-amount-words').textContent = convertNumberToWords(subtotal);
@@ -587,6 +638,13 @@
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric'
+                });
+            }
+            
+            function formatCurrency(amount) {
+                return amount.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                 });
             }
             
@@ -704,15 +762,19 @@
                 doc.text(`Date: ${formattedDate}`, margin, yPos);
                 yPos += 15;
                 
-                // Add table headers
-                doc.setFillColor(240, 240, 240);
+                // Add table headers with proper styling
+                doc.setFillColor(44, 62, 80); // Dark blue background
                 doc.rect(margin, yPos, 165, 8, 'F');
+                doc.setTextColor(255, 255, 255); // White text
                 doc.setFontSize(10);
                 doc.text('Description', margin + 2, yPos + 5);
                 doc.text('Qty', margin + 100, yPos + 5);
                 doc.text('Price', margin + 120, yPos + 5);
                 doc.text('Total', margin + 150, yPos + 5);
                 yPos += 8;
+                
+                // Reset text color
+                doc.setTextColor(0, 0, 0);
                 
                 // Add table rows
                 let subtotal = 0;
@@ -730,7 +792,7 @@
                     // Calculate row height based on description lines
                     const rowHeight = Math.max(descLines.length * 5, 8);
                     
-                    // Draw row
+                    // Draw row borders
                     doc.setDrawColor(200, 200, 200);
                     doc.line(margin, yPos, margin + 165, yPos); // Top line
                     doc.line(margin, yPos + rowHeight, margin + 165, yPos + rowHeight); // Bottom line
@@ -743,9 +805,9 @@
                     // Add text
                     doc.text(descLines, margin + 2, yPos + 5);
                     doc.text(qty.toString(), margin + 102, yPos + 5, { align: 'right' });
-                    // Use "Rs." instead of rupee symbol for PDF compatibility
-                    doc.text('Rs. ' + price.toFixed(2), margin + 122, yPos + 5, { align: 'right' });
-                    doc.text('Rs. ' + amount.toFixed(2), margin + 152, yPos + 5, { align: 'right' });
+                    // Use "Rs." for PDF compatibility but format with proper spacing
+                    doc.text('Rs. ' + formatCurrency(price), margin + 122, yPos + 5, { align: 'right' });
+                    doc.text('Rs. ' + formatCurrency(amount), margin + 152, yPos + 5, { align: 'right' });
                     
                     yPos += rowHeight;
                 });
@@ -753,9 +815,10 @@
                 yPos += 10;
                 
                 // Add totals
-                doc.text(`Sub Total: Rs. ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
+                doc.setFontSize(12);
+                doc.text(`Sub Total: Rs. ${formatCurrency(subtotal)}`, margin + 120, yPos, { align: 'right' });
                 yPos += 7;
-                doc.text(`Total Amount: Rs. ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
+                doc.text(`Total Amount: Rs. ${formatCurrency(subtotal)}`, margin + 120, yPos, { align: 'right' });
                 yPos += 10;
                 
                 // Add amount in words
