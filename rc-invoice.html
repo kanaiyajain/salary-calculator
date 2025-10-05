@@ -228,6 +228,10 @@
         .add-row-btn:hover {
             background-color: #219653;
         }
+        
+        .rupee-symbol {
+            font-family: Arial, sans-serif;
+        }
     </style>
 </head>
 <body>
@@ -337,19 +341,19 @@
                         <tr>
                             <td>Online Content Writing for Month /2025</td>
                             <td>1</td>
-                            <td>$ 0.00</td>
-                            <td>$ 0.00</td>
+                            <td><span class="rupee-symbol">₹</span> 0.00</td>
+                            <td><span class="rupee-symbol">₹</span> 0.00</td>
                         </tr>
                     </tbody>
                 </table>
                 
                 <div class="totals">
-                    <p><strong>Sub Total:</strong> $ <span id="preview-subtotal">0.00</span></p>
-                    <p><strong>Total Amount:</strong> $ <span id="preview-total">0.00</span></p>
+                    <p><strong>Sub Total:</strong> <span class="rupee-symbol">₹</span> <span id="preview-subtotal">0.00</span></p>
+                    <p><strong>Total Amount:</strong> <span class="rupee-symbol">₹</span> <span id="preview-total">0.00</span></p>
                 </div>
                 
                 <div class="amount-words">
-                    <p><strong>Amount in Words:</strong> <span id="preview-amount-words">Zero dollars</span></p>
+                    <p><strong>Amount in Words:</strong> <span id="preview-amount-words">Zero rupees</span></p>
                 </div>
                 
                 <div class="note-section">
@@ -467,15 +471,21 @@
                     tr.innerHTML = `
                         <td>${desc}</td>
                         <td>${qty}</td>
-                        <td>$ ${price.toFixed(2)}</td>
-                        <td>$ ${amount.toFixed(2)}</td>
+                        <td><span class="rupee-symbol">₹</span> ${price.toFixed(2)}</td>
+                        <td><span class="rupee-symbol">₹</span> ${amount.toFixed(2)}</td>
                     `;
                     particularsTable.appendChild(tr);
                 });
                 
                 // Update totals
-                document.getElementById('preview-subtotal').textContent = subtotal.toFixed(2);
-                document.getElementById('preview-total').textContent = subtotal.toFixed(2);
+                document.getElementById('preview-subtotal').textContent = subtotal.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                document.getElementById('preview-total').textContent = subtotal.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
                 
                 // Update amount in words
                 document.getElementById('preview-amount-words').textContent = convertNumberToWords(subtotal);
@@ -492,7 +502,7 @@
             }
             
             function convertNumberToWords(num) {
-                if (num === 0) return 'Zero dollars';
+                if (num === 0) return 'Zero rupees only';
                 
                 const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
                               'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
@@ -500,34 +510,49 @@
                 
                 let words = '';
                 
-                // Handle dollars
-                const dollars = Math.floor(num);
-                const cents = Math.round((num - dollars) * 100);
+                // Handle rupees
+                const rupees = Math.floor(num);
+                const paise = Math.round((num - rupees) * 100);
                 
-                if (dollars === 0) {
+                if (rupees === 0) {
                     words = 'Zero';
-                } else if (dollars < 20) {
-                    words = ones[dollars];
-                } else if (dollars < 100) {
-                    words = tens[Math.floor(dollars / 10)];
-                    if (dollars % 10 > 0) {
-                        words += ' ' + ones[dollars % 10];
+                } else if (rupees < 20) {
+                    words = ones[rupees];
+                } else if (rupees < 100) {
+                    words = tens[Math.floor(rupees / 10)];
+                    if (rupees % 10 > 0) {
+                        words += ' ' + ones[rupees % 10];
                     }
-                } else if (dollars < 1000) {
-                    words = ones[Math.floor(dollars / 100)] + ' Hundred';
-                    if (dollars % 100 > 0) {
-                        words += ' and ' + convertNumberToWords(dollars % 100).toLowerCase();
+                } else if (rupees < 1000) {
+                    words = ones[Math.floor(rupees / 100)] + ' Hundred';
+                    if (rupees % 100 > 0) {
+                        words += ' and ' + convertNumberToWords(rupees % 100).toLowerCase();
+                    }
+                } else if (rupees < 100000) {
+                    words = convertNumberToWords(Math.floor(rupees / 1000)) + ' Thousand';
+                    if (rupees % 1000 > 0) {
+                        words += ' ' + convertNumberToWords(rupees % 1000).toLowerCase();
+                    }
+                } else if (rupees < 10000000) {
+                    words = convertNumberToWords(Math.floor(rupees / 100000)) + ' Lakh';
+                    if (rupees % 100000 > 0) {
+                        words += ' ' + convertNumberToWords(rupees % 100000).toLowerCase();
                     }
                 } else {
-                    words = 'Large amount';
+                    words = convertNumberToWords(Math.floor(rupees / 10000000)) + ' Crore';
+                    if (rupees % 10000000 > 0) {
+                        words += ' ' + convertNumberToWords(rupees % 10000000).toLowerCase();
+                    }
                 }
                 
-                words += ' dollar' + (dollars === 1 ? '' : 's');
+                words += ' rupee' + (rupees === 1 ? '' : 's');
                 
-                // Handle cents
-                if (cents > 0) {
-                    words += ' and ' + cents + ' cent' + (cents === 1 ? '' : 's');
+                // Handle paise
+                if (paise > 0) {
+                    words += ' and ' + paise + ' paise';
                 }
+                
+                words += ' only';
                 
                 return words;
             }
@@ -629,8 +654,8 @@
                     // Add text
                     doc.text(descLines, margin + 2, yPos + 5);
                     doc.text(qty.toString(), margin + 102, yPos + 5, { align: 'right' });
-                    doc.text('$ ' + price.toFixed(2), margin + 122, yPos + 5, { align: 'right' });
-                    doc.text('$ ' + amount.toFixed(2), margin + 152, yPos + 5, { align: 'right' });
+                    doc.text('₹ ' + price.toFixed(2), margin + 122, yPos + 5, { align: 'right' });
+                    doc.text('₹ ' + amount.toFixed(2), margin + 152, yPos + 5, { align: 'right' });
                     
                     yPos += rowHeight;
                 });
@@ -638,9 +663,9 @@
                 yPos += 10;
                 
                 // Add totals
-                doc.text(`Sub Total: $ ${subtotal.toFixed(2)}`, margin + 120, yPos, { align: 'right' });
+                doc.text(`Sub Total: ₹ ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
                 yPos += 7;
-                doc.text(`Total Amount: $ ${subtotal.toFixed(2)}`, margin + 120, yPos, { align: 'right' });
+                doc.text(`Total Amount: ₹ ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
                 yPos += 10;
                 
                 // Add amount in words
