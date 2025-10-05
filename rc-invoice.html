@@ -83,15 +83,16 @@
         }
         
         .particulars-header {
-            display: flex;
+            display: grid;
+            grid-template-columns: 3fr 1fr 1fr 1fr 40px;
             gap: 10px;
             margin-bottom: 10px;
             font-weight: 600;
             color: #2c3e50;
+            padding: 0 5px;
         }
         
         .particulars-header div {
-            flex: 1;
             text-align: center;
         }
         
@@ -100,15 +101,17 @@
         }
         
         .particular-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: 3fr 1fr 1fr 1fr 40px;
             gap: 10px;
             margin-bottom: 10px;
             align-items: center;
         }
         
         .particular-row input {
-            flex: 1;
+            width: 100%;
             text-align: center;
+            padding: 8px;
         }
         
         .particular-row input:first-child {
@@ -267,10 +270,33 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 16px;
         }
         
         .delete-row:hover {
             background-color: #c0392b;
+        }
+        
+        .price-input-container, .amount-input-container {
+            position: relative;
+        }
+        
+        .price-input-container::before, .amount-input-container::before {
+            content: "₹";
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            z-index: 1;
+        }
+        
+        .price-input-container input, .amount-input-container input {
+            padding-left: 20px;
+        }
+        
+        .amount-input-container input {
+            background-color: #f9f9f9;
         }
     </style>
 </head>
@@ -328,13 +354,17 @@
                     <div>Qty</div>
                     <div>Price</div>
                     <div>Amount</div>
-                    <div style="width: 40px;"></div>
+                    <div></div>
                 </div>
                 <div class="particular-row">
                     <input type="text" class="particular-desc" placeholder="Description" value="Online Content Writing for Month /2025">
                     <input type="number" class="particular-qty" placeholder="Qty" value="1" min="1">
-                    <input type="number" class="particular-price" placeholder="Price" value="0" min="0" step="0.01">
-                    <input type="text" class="particular-amount" placeholder="Amount" readonly>
+                    <div class="price-input-container">
+                        <input type="number" class="particular-price" placeholder="0.00" value="0" min="0" step="0.01">
+                    </div>
+                    <div class="amount-input-container">
+                        <input type="text" class="particular-amount" placeholder="0.00" readonly>
+                    </div>
                     <button type="button" class="delete-row" disabled>×</button>
                 </div>
                 <div id="particulars-container">
@@ -458,8 +488,12 @@
                 newRow.innerHTML = `
                     <input type="text" class="particular-desc" placeholder="Description">
                     <input type="number" class="particular-qty" placeholder="Qty" value="1" min="1">
-                    <input type="number" class="particular-price" placeholder="Price" value="0" min="0" step="0.01">
-                    <input type="text" class="particular-amount" placeholder="Amount" readonly>
+                    <div class="price-input-container">
+                        <input type="number" class="particular-price" placeholder="0.00" value="0" min="0" step="0.01">
+                    </div>
+                    <div class="amount-input-container">
+                        <input type="text" class="particular-amount" placeholder="0.00" readonly>
+                    </div>
                     <button type="button" class="delete-row">×</button>
                 `;
                 container.appendChild(newRow);
@@ -616,6 +650,10 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'mm', 'a4');
                 
+                // Add rupee symbol font support
+                doc.addFont('https://fonts.gstatic.com/s/notosans/v27/o-0IIpQlx3QUlC5A4PNr6zRASl6M7Q.woff2', 'NotoSans', 'normal');
+                doc.setFont('NotoSans');
+                
                 // Set margins
                 const margin = 15;
                 let yPos = margin;
@@ -709,9 +747,9 @@
                     // Add text
                     doc.text(descLines, margin + 2, yPos + 5);
                     doc.text(qty.toString(), margin + 102, yPos + 5, { align: 'right' });
-                    // Use "Rs." instead of rupee symbol for better PDF compatibility
-                    doc.text('Rs. ' + price.toFixed(2), margin + 122, yPos + 5, { align: 'right' });
-                    doc.text('Rs. ' + amount.toFixed(2), margin + 152, yPos + 5, { align: 'right' });
+                    // Use rupee symbol with proper font
+                    doc.text('₹ ' + price.toFixed(2), margin + 122, yPos + 5, { align: 'right' });
+                    doc.text('₹ ' + amount.toFixed(2), margin + 152, yPos + 5, { align: 'right' });
                     
                     yPos += rowHeight;
                 });
@@ -719,9 +757,9 @@
                 yPos += 10;
                 
                 // Add totals
-                doc.text(`Sub Total: Rs. ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
+                doc.text(`Sub Total: ₹ ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
                 yPos += 7;
-                doc.text(`Total Amount: Rs. ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
+                doc.text(`Total Amount: ₹ ${subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, margin + 120, yPos, { align: 'right' });
                 yPos += 10;
                 
                 // Add amount in words
