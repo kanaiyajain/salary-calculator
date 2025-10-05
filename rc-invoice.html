@@ -6,24 +6,104 @@
 <title>Invoice Generator</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
-  body { font-family: 'Arial', sans-serif; background: #f5f7fa; padding: 20px; color: #333; }
-  h2 { text-align: center; }
-  form { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-  label { display: block; margin-top: 10px; font-weight: bold; }
-  input, textarea { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-  th { background: #0a2e6c; color: #fff; }
-  #invoice { background: #fff; padding: 40px; margin: auto; border-radius: 10px; width: 210mm; min-height: 297mm; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  .header { text-align: center; margin-bottom: 30px; }
-  .footer { text-align: right; margin-top: 30px; font-weight: bold; }
-  .sign { margin-top: 50px; text-align: right; }
-  .thankyou { text-align: center; font-size: 20px; font-weight: bold; color: #0a2e6c; margin-top: 30px; }
+  body {
+    font-family: 'Arial', sans-serif;
+    background: #f5f7fa;
+    padding: 20px;
+    color: #333;
+  }
+  h2 {
+    text-align: center;
+  }
+  form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  th {
+    background: #0a2e6c;
+    color: #fff;
+  }
+  /* Invoice Layout */
+  #invoice {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    box-sizing: border-box;
+    margin: auto;
+    border-radius: 10px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 3px solid #0a2e6c;
+    padding-bottom: 10px;
+  }
+  .header h1 {
+    color: #0a2e6c;
+    margin: 0;
+  }
+  .billfrom {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  .billto, .from {
+    width: 48%;
+  }
+  .from {
+    text-align: right;
+  }
+  .section {
+    margin-top: 20px;
+  }
+  .footer {
+    text-align: right;
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  .sign {
+    margin-top: 50px;
+    text-align: right;
+  }
+  .thankyou {
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: #0a2e6c;
+    margin-top: 30px;
+  }
 </style>
 </head>
 <body>
 
 <h2>Freelancer Invoice Generator</h2>
+
 <form id="invoiceForm">
   <label>Invoice Issuer Name:</label>
   <input type="text" id="issuerName" required>
@@ -69,36 +149,49 @@
   <button type="button" onclick="generateInvoice()">Generate Invoice PDF</button>
 </form>
 
+<!-- Hidden Invoice Template -->
 <div id="invoice" style="display:none;">
   <div class="header">
     <h1>INVOICE</h1>
-    <p><strong>Invoice No:</strong> <span id="showInvoiceNumber"></span><br>
+    <p><strong>Invoice No:</strong> <span id="showInvoiceNumber"></span> &nbsp;&nbsp; | &nbsp;&nbsp;
     <strong>Date:</strong> <span id="showInvoiceDate"></span></p>
   </div>
 
-  <p><strong>Bill To:</strong><br>
-  Redcoupons Private Limited<br>
-  Ward No. 29, Pani Tanki Ke Pass,<br>
-  Nokha, Bikaner, Nokha, Rajasthan, India, 334803<br>
-  CIN: U73100RJ2024PTC098563</p>
+  <div class="billfrom">
+    <div class="billto">
+      <strong>Bill To:</strong><br>
+      Redcoupons Private Limited<br>
+      Ward No. 29, Pani Tanki Ke Pass,<br>
+      Nokha, Bikaner, Nokha, Rajasthan, India, 334803<br>
+      <strong>CIN:</strong> U73100RJ2024PTC098563
+    </div>
+    <div class="from">
+      <strong>From:</strong><br>
+      <span id="showIssuerName"></span><br>
+      <span id="showIssuerAddress"></span><br>
+      PAN: <span id="showPAN"></span>
+    </div>
+  </div>
 
-  <p><strong>From:</strong><br>
-  <span id="showIssuerName"></span><br>
-  <span id="showIssuerAddress"></span><br>
-  PAN: <span id="showPAN"></span></p>
+  <div class="section">
+    <table id="invoiceTable"></table>
+  </div>
 
-  <table id="invoiceTable"></table>
+  <div class="footer">
+    Total Amount: ₹<span id="totalAmount"></span><br>
+    Amount in Words: <span id="amountWords"></span>
+  </div>
 
-  <p><strong>Total Amount:</strong> ₹<span id="totalAmount"></span></p>
-  <p><strong>Amount in Words:</strong> <span id="amountWords"></span></p>
-
-  <p><strong>Bank Details:</strong><br>
-  Bank Name: <span id="showBankName"></span><br>
-  A/C Number: <span id="showAccountNumber"></span><br>
-  IFSC: <span id="showIFSC"></span></p>
+  <div class="section">
+    <strong>Bank Details:</strong><br>
+    Bank Name: <span id="showBankName"></span><br>
+    Account Number: <span id="showAccountNumber"></span><br>
+    IFSC Code: <span id="showIFSC"></span>
+  </div>
 
   <div class="sign">
-    <p>__________________________<br>Signature of Issuer</p>
+    __________________________<br>
+    Signature of Issuer
   </div>
 
   <div class="thankyou">Thank You!</div>
@@ -120,7 +213,8 @@ function numberToWords(num) {
   const b = ['','', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
   if ((num = num.toString()).length > 9) return 'Overflow';
   let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-  if (!n) return; let str = '';
+  if (!n) return;
+  let str = '';
   str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + ' Crore ' : '';
   str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + ' Lakh ' : '';
   str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + ' Thousand ' : '';
@@ -168,7 +262,7 @@ function generateInvoice() {
   invoice.style.display = "block";
 
   const opt = {
-    margin: 10,
+    margin: [15, 15, 15, 15], // Top, Left, Bottom, Right margin in mm
     filename: `Invoice-${invoiceNumber || 'Redcoupons'}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2 },
