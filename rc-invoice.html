@@ -227,7 +227,7 @@
             <strong>Payment Information:</strong><br>
             Bank: <span id="pdfBank"></span><br>
             A/C No: <span id="pdfAcc"></span><br>
-            IFSC: <span id="pdfIfsc"><br>
+            IFSC: <span id="pdfIfsc"></span><br>
             PAN: <span id="pdfPan"></span>
         </div>
 
@@ -329,14 +329,21 @@
         document.getElementById('pdfSubTotal').textContent = currencyFormat(sub);
         document.getElementById('pdfWords').textContent = numToWords(Math.round(sub));
 
+        // --- FIX: Show invoiceArea for rendering ---
+        const invoiceArea = document.getElementById('invoiceArea');
+        const prevDisplay = invoiceArea.style.display;
+        invoiceArea.style.display = 'block';
+
         // Create PDF
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         doc.setProperties({ title: 'Invoice' });
 
-        doc.html(document.getElementById('invoiceArea'), {
+        doc.html(invoiceArea, {
             callback: function (doc) {
                 doc.save('Invoice.pdf');
+                // Hide again after rendering
+                invoiceArea.style.display = prevDisplay;
             },
             x: 10,
             y: 10,
