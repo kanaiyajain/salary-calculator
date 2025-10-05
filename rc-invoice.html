@@ -12,7 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <style>
         /* --- A4 Page/Print Configuration --- */
-        /* Forces the output to be exactly A4 size */
         @page {
             size: A4;
             margin: 0;
@@ -23,11 +22,18 @@
             margin: 0; 
             padding: 20px; 
             background-color: #f4f4f9; 
-            font-size: 10pt; /* Default font size for A4 print optimization */
+            font-size: 10pt;
         }
-        .container { max-width: 900px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background-color: #fff; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
+        }
         
-        /* --- Form Styles --- (Kept similar for functionality) */
+        /* --- Input Form Styles --- */
         #invoice-input-form h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 20px; }
         .input-group { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 15px; }
         .input-item { flex: 1 1 45%; min-width: 250px; }
@@ -36,10 +42,11 @@
             width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
             font-size: 14px;
         }
-        .btn-generate { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; background-color: #007bff; color: white; }
-        .signature-options { padding: 10px; border: 1px dashed #ccc; border-radius: 4px; margin-top: 15px; }
-
-        /* --- Invoice Output Area (Refined to match image design) --- */
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-generate { background-color: #007bff; color: white; margin-left: 10px; }
+        .btn-add { background-color: #5cb85c; color: white; }
+        
+        /* --- Invoice Output Area (Fixed A4 Dimensions) --- */
         #invoice-output { 
             display: none; 
             box-sizing: border-box;
@@ -48,180 +55,180 @@
             margin: 0 auto;
             border: none; 
             padding: 0; 
-            box-shadow: none;
             background-color: #fff;
         }
+        
+        /* Consistent Padding/Margin for Output Sections */
+        .section-padding { padding: 0 10mm; } /* 10mm left/right margin */
 
-        /* Dark Blue Header Section */
+        /* Header Section */
         .header-bg {
             background-color: #1a4d80; /* Dark Blue */
             color: white;
-            padding: 20px 40px;
-            overflow: hidden; /* Contains the curved shape */
-            position: relative;
+            padding: 15mm 10mm 5mm 10mm; /* Adjusted padding for better fit */
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
         }
         .header-bg h2 {
-            font-size: 30pt;
+            font-size: 24pt;
             margin: 0;
-            padding: 0;
             font-weight: bold;
-            float: left;
         }
         .header-bg .invoice-no {
-            font-size: 14pt;
-            float: right;
-            margin-top: 15px;
+            font-size: 11pt;
             font-weight: bold;
-        }
-        /* Curved white shape overlaying the dark blue header */
-        .curve {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 100% 0, transparent 400px, white 400px),
-                linear-gradient(to right bottom, transparent 50%, white 50%);
-            background-size: 100% 100%;
-            clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
-            opacity: 0.1; /* subtle effect */
+            text-align: right;
+            border: 1px solid white;
+            padding: 5px 10px;
+            border-radius: 4px;
         }
 
-
-        /* Bill To / From Section */
+        /* Address Section */
         .address-section {
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20mm;
+            padding: 10mm 10mm 0 10mm;
         }
         .address-section div {
-            flex-basis: 48%;
-            padding: 10px;
+            padding: 5px;
         }
         .address-section h3 {
-            font-size: 12pt;
+            font-size: 10pt;
             font-weight: bold;
-            margin-bottom: 10px;
-            color: #1a4d80; /* Dark Blue */
+            margin-bottom: 5px;
+            color: #1a4d80;
+            border-bottom: 2px solid #1a4d80;
+            display: inline-block;
+            padding-bottom: 3px;
         }
-        .address-section p { margin: 2px 0; font-size: 10pt; }
-        .recipient-details { text-align: left; }
+        .address-section p { margin: 2px 0; font-size: 9pt; }
         .issuer-details { text-align: right; }
 
-        /* Date and CIN/Bank Details Section */
+        /* Meta Data (Date) */
         .meta-data {
-            padding: 0 40px;
-            margin-bottom: 20px;
+            padding: 5mm 10mm 10mm 10mm;
+            border-bottom: 1px solid #ccc;
         }
-        .meta-data p { margin: 5px 0; font-weight: bold; font-size: 10pt; }
+        .meta-data p { margin: 2px 0; font-weight: bold; font-size: 9pt; }
+        .meta-data .bank-details { margin-top: 10px; }
 
         /* Items Table Output */
         .invoice-table-output { 
-            width: calc(100% - 80px); /* 100% minus 2*40px padding */
-            margin: 0 40px; 
+            width: 100%;
             border-collapse: collapse;
+            margin-bottom: 20px;
         }
         .invoice-table-output thead th { 
-            background-color: #1a4d80; /* Dark Blue */
+            background-color: #1a4d80;
             color: white; 
             padding: 10px; 
-            font-weight: bold;
+            font-weight: normal; /* Less bold for better print */
             border: none;
+            font-size: 9pt;
+            text-align: left;
         }
         .invoice-table-output td { 
             border: 1px solid #ddd; 
             padding: 8px 10px; 
-            text-align: left;
+            font-size: 9pt;
+            height: 25px; /* Ensures row height consistency */
         }
         .invoice-table-output .output-amount,
         .invoice-table-output .output-qty,
         .invoice-table-output .output-price { text-align: right; }
 
-        /* Totals Block */
+        /* Footer Layout (Grid for Stability) */
         .total-and-footer {
-            display: flex;
-            justify-content: space-between;
-            padding: 0 40px;
-            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 3fr 1fr; /* Words/Notes (75%) | Totals (25%) */
+            column-gap: 5mm;
+            padding: 0 10mm;
         }
+
+        /* Total Block */
         .output-totals {
-            width: 300px;
+            grid-column: 2;
+            width: 100%;
             text-align: right;
-            border-top: 3px solid #1a4d80;
         }
         .output-totals .total-row {
             display: flex;
             justify-content: space-between;
             padding: 5px 0;
-            font-size: 11pt;
-            font-weight: bold;
+            font-size: 10pt;
+            border-top: 1px solid #ccc;
         }
         .output-totals .total-row:last-child {
-            font-size: 12pt;
-            color: #1a4d80;
-            padding-top: 10px;
-        }
-
-        /* Note and Thank You Section */
-        .notes-and-payment {
-            flex-basis: 60%;
-            text-align: left;
-            margin-top: 10px;
-        }
-        .notes-and-payment h4 {
             font-size: 11pt;
             color: #1a4d80;
-            margin-bottom: 5px;
+            font-weight: bold;
+            border-top: 2px solid #1a4d80;
+            padding-top: 8px;
+        }
+
+        /* Words & Notes */
+        .notes-and-payment {
+            grid-column: 1;
+            text-align: left;
+            padding-right: 10mm;
+            font-size: 9pt;
+        }
+        .notes-and-payment h4 {
+            font-size: 10pt;
+            color: #1a4d80;
+            margin: 15px 0 5px 0;
+            font-weight: bold;
         }
         .thank-you {
             font-family: 'Dancing Script', cursive;
-            font-size: 36pt;
+            font-size: 20pt;
             color: #1a4d80;
-            text-align: right;
-            margin-top: 40px;
-            margin-right: 40px;
+            margin-top: 15mm;
+            text-align: center;
         }
 
         /* Signature Block */
         .signature-block { 
-            padding: 0 40px; 
-            margin-top: 40px; 
+            padding: 0 10mm; 
+            margin-top: 25mm; /* Space it down the page */
             text-align: right; 
         }
         .manual-signature-line { 
             border-bottom: 1px solid #333; 
-            width: 200px; 
+            width: 50mm; /* Fixed width in mm */
             margin-left: auto;
             margin-bottom: 5px;
         }
-        .signature-date-output { 
-            font-style: italic; 
-            font-size: 9pt; 
-            margin-top: 5px;
+        .signature-block p { 
+            margin: 1px 0; 
+            font-size: 8pt; 
         }
 
-        /* Print/PDF Specific Styles */
+        /* --- Print/PDF Specific Styles (Crucial for Alignment) --- */
         @media print {
             body { 
                 background-color: #fff; 
                 padding: 0 !important;
                 margin: 0 !important;
             }
-            .container, .button-group, #invoice-input-form { 
+            .container, .button-group, #invoice-input-form, .words-section { 
                 display: none !important; 
             }
             #invoice-output { 
                 display: block !important; 
                 margin: 0;
                 box-shadow: none;
-                /* Ensure it takes up the full A4 space */
                 width: 210mm;
                 min-height: 297mm;
             }
+            /* Reset specific element borders for clean print */
             .invoice-table-output td { 
-                border: 1px solid #ddd;
+                border: 1px solid #000;
+            }
+            .output-totals .total-row:last-child {
+                border-top: 2px solid #000;
             }
         }
     </style>
@@ -249,9 +256,9 @@
             <h2>Invoice & Payment Details</h2>
             <div class="input-group">
                 <div class="input-item"><label for="invoice-date">Invoice Date</label><input type="date" id="invoice-date" value="2025-10-05" required></div>
-                <div class="input-item"><label for="invoice-number">Invoice Number</label><input type="text" id="invoice-number" value="" required></div>
-                <div class="input-item"><label for="issuer-account">Bank A/C No.</label><input type="text" id="issuer-account" value=""></div>
-                <div class="input-item"><label for="issuer-ifsc">IFSC Code</label><input type="text" id="issuer-ifsc" value=""></div>
+                <div class="input-item"><label for="invoice-number">Invoice Number</label><input type="text" id="invoice-number" value="INV-2025-001" required></div>
+                <div class="input-item"><label for="issuer-account">Bank A/C No.</label><input type="text" id="issuer-account" value="1234567890"></div>
+                <div class="input-item"><label for="issuer-ifsc">IFSC Code</label><input type="text" id="issuer-ifsc" value="HDFC0000123"></div>
                 <div class="input-item"><label for="signature-date">Signature Date (Date of Invoice)</label><input type="date" id="signature-date" value="2025-10-05"></div>
             </div>
 
@@ -267,10 +274,10 @@
                 </thead>
                 <tbody id="invoice-items-body">
                     <tr class="item-row">
-                        <td><input type="text" class="description" placeholder="Service Description" value="Online Content Writing for Month /2025"></td>
+                        <td><input type="text" class="description" placeholder="Service Description" value="Online Content Writing for October /2025"></td>
                         <td><input type="number" class="qty" value="1" min="1"></td>
                         <td><input type="number" class="price" value="50000" min="0" step="0.01"></td>
-                        <td class="amount">0.00</td>
+                        <td class="amount">50000.00</td>
                     </tr>
                 </tbody>
             </table>
@@ -279,25 +286,27 @@
             </div>
 
             <div class="invoice-totals">
-                <div class="total-row"><span>Sub Total:</span> <span id="sub-total-input">₹0.00</span></div>
-                <div class="total-row"><span>**Total Amount:**</span> <span id="grand-total-input">**₹0.00**</span></div>
+                <div class="total-row"><span>Sub Total:</span> <span id="sub-total-input">₹50,000.00</span></div>
+                <div class="total-row"><span>**Total Amount:**</span> <span id="grand-total-input">**₹50,000.00**</span></div>
             </div>
 
             <div class="words-section">
                 <p>Total Amount in Words:</p>
-                <p id="total-in-words">**Zero Rupees Only**</p>
+                <p id="total-in-words">**FIFTY THOUSAND RUPEES ONLY**</p>
             </div>
 
             <div class="button-group">
-                <button class="btn btn-generate" onclick="generateInvoicePDF()">Generate Invoice PDF & Download</button>
+                <button class="btn btn-generate" onclick="generateInvoicePDF()">1. Generate PDF & Download</button>
+                <button class="btn btn-generate" onclick="window.print()">2. Print (Browser Dialog)</button>
             </div>
         </div>
         
         <div id="invoice-output">
-            <div class="header-bg">
-                <h2>INVOICE</h2>
+            
+            <div class="header-bg section-padding">
+                <h2>TAX INVOICE</h2>
                 <div class="invoice-no">NO: <span id="output-invoice-number"></span></div>
-                </div>
+            </div>
 
             <div class="address-section">
                 <div class="recipient-details">
@@ -313,11 +322,12 @@
                 </div>
             </div>
 
-            <div class="meta-data">
+            <div class="meta-data section-padding">
                 <p>Date: <span id="output-invoice-date"></span></p>
+                <p>PAN: <span id="output-issuer-pan"></span></p>
             </div>
 
-            <table class="invoice-table-output">
+            <table class="invoice-table-output section-padding">
                 <thead>
                     <tr>
                         <th style="width: 50%;">Description</th>
@@ -332,14 +342,16 @@
 
             <div class="total-and-footer">
                 <div class="notes-and-payment">
+                    <h4>Amount Chargeable (in words):</h4>
+                    <p style="margin-top: 5px; font-weight: bold;"><span id="output-total-in-words"></span></p>
+
                     <h4>Payment Information:</h4>
-                    <p style="margin-top: 10px;">Bank: **[Your Bank Name]**</p>
+                    <p>Bank: **[Your Bank Name]**</p>
                     <p>A/C No: <span id="output-account"></span></p>
                     <p>IFSC: <span id="output-ifsc"></span></p>
-                    <p>PAN: <span id="output-issuer-pan"></span></p>
                     
-                    <h4 style="margin-top: 20px;">Notes:</h4>
-                    <p style="border-bottom: 1px solid #ddd; width: 80%; padding-bottom: 5px; margin-top: 5px;">Payment due within 7 days of invoice date.</p>
+                    <h4 style="margin-top: 10px;">Notes:</h4>
+                    <p style="border-bottom: 1px solid #ddd; width: 100%; padding-bottom: 5px;">Payment due within 7 days of invoice date.</p>
                 </div>
 
                 <div class="output-totals">
@@ -353,14 +365,14 @@
             <div class="signature-block">
                 <div class="manual-signature-line"></div>
                 <p class="signature-date-output">For: <span id="output-signature-name"></span></p>
-                <p class="signature-date-output">Date of Invoice: <span id="output-signature-date"></span></p>
+                <p class="signature-date-output">Date: <span id="output-signature-date"></span></p>
                 <p>Authorised Signatory</p>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Core Functions ---
+        // --- Core Functions (Calculations and Item Handling remain the same) ---
         function calculateRowTotal(row) {
             const qty = parseFloat(row.querySelector('.qty').value) || 0;
             const price = parseFloat(row.querySelector('.price').value) || 0;
@@ -377,7 +389,7 @@
                 subTotal += parseFloat(amountText) || 0;
             });
 
-            // Update display totals
+            // Update input totals
             document.getElementById('sub-total-input').textContent = `₹${subTotal.toFixed(2)}`;
             document.getElementById('grand-total-input').textContent = `**₹${subTotal.toFixed(2)}**`;
 
@@ -416,7 +428,7 @@
             const signatureDate = document.getElementById('signature-date').value;
             const recipientAddress = document.getElementById('recipient-address').value.replace(/\n/g, '<br>');
             
-            // 2. Populate Header Details
+            // 2. Populate Header and Details
             document.getElementById('output-issuer-name').textContent = issuerName;
             document.getElementById('output-issuer-address').textContent = document.getElementById('issuer-address').value;
             document.getElementById('output-issuer-pan').textContent = document.getElementById('issuer-pan').value || 'N/A';
@@ -429,7 +441,6 @@
             const dateFormatter = new Intl.DateTimeFormat('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById('output-invoice-date').textContent = dateFormatter.format(new Date(invoiceDate));
             document.getElementById('output-signature-date').textContent = dateFormatter.format(new Date(signatureDate));
-            
             document.getElementById('output-signature-name').textContent = issuerName;
 
             // 3. Populate Items Table
@@ -456,6 +467,7 @@
             // 4. Populate Totals
             document.getElementById('output-sub-total').textContent = document.getElementById('sub-total-input').textContent;
             document.getElementById('output-grand-total').textContent = document.getElementById('grand-total-input').textContent;
+            document.getElementById('output-total-in-words').textContent = document.getElementById('total-in-words').textContent;
         }
 
         /**
@@ -468,13 +480,13 @@
 
             const element = document.getElementById('invoice-output');
             
-            // **PDF FIX:** Temporarily make the element visible before generation starts
+            // **PDF FIX:** Temporarily make the element visible (Crucial for html2pdf to render hidden content)
             element.style.display = 'block';
 
             // 2. Configure html2pdf options (Set format to A4 explicitly)
             const options = {
-                margin: 0, // Set to 0 because we're controlling margins via CSS
-                filename: `Invoice.pdf`, 
+                margin: 0, 
+                filename: `Invoice_${document.getElementById('invoice-number').value || 'New'}.pdf`, 
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { 
                     scale: 2, 
@@ -497,9 +509,8 @@
             });
         }
 
-        // --- Third-party library for number-to-words conversion (included here for simplicity) ---
+        // --- Third-party library for number-to-words conversion (INCLUDED FOR COMPLETENESS) ---
         const numberToWords = (function () {
-            // ... (numberToWords function content is omitted for brevity but is included in the full code)
             const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
             const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
             const ntw = function (num) {
