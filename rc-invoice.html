@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelancer Invoice Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" 
+        integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" 
+        crossorigin="anonymous" 
+        referrerpolicy="no-referrer">
+    </script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 900px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        /* --- Form Styles --- */
+        .input-group { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 15px; }
+        .input-item { flex: 1 1 45%; min-width: 250px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="date"], input[type="number"], textarea {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+            font-size: 14px;
+        }
+        textarea { resize: vertical; }
+
+        /* --- Invoice Table Styles --- */
+        #invoice-items-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        #invoice-items-table th, #invoice-items-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        #invoice-items-table th { background-color: #f8f8f8; color: #333; font-weight: bold; }
+        .item-row input { border: none; padding: 5px; width: calc(100% - 10px); }
+        .item-row .qty, .item-row .price { text-align: right; }
+        .item-row .amount { text-align: right; font-weight: bold; }
+
+        .button-group { text-align: center; margin-top: 30px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; }
+        .btn-add { background-color: #5cb85c; color: white; margin-right: 10px; }
+        .btn-add:hover { background-color: #4cae4c; }
+        .btn-generate { background-color: #007bff; color: white; }
+        .btn-generate:hover { background-color: #0056b3; }
+
+        .invoice-totals { margin-top: 20px; display: flex; flex-direction: column; align-items: flex-end; }
+        .total-row { display: flex; justify-content: space-between; width: 100%; max-width: 350px; padding: 8px 0; border-top: 1px solid #eee; }
+        .total-row:last-child { font-weight: bold; border-top: 2px solid #333; }
+        .words-section { margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; }
+        .words-section p { margin: 0; font-style: italic; color: #666; }
+
+        /* --- Invoice Output Area (Styled for Print/PDF) --- */
+        #invoice-output { 
+            display: none; /* Hidden by default, only shows when generated or for print/PDF */
+            margin-top: 40px; border: 1px solid #ddd; padding: 20px; border-radius: 8px;
+        }
+        #invoice-output h2 { text-align: center; color: #007bff; }
+        .invoice-header, .invoice-details, .issuer-details, .recipient-details { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .invoice-details strong, .invoice-header strong { display: block; margin-top: 5px; }
+        .invoice-data, .bank-data { border: 1px solid #ddd; padding: 10px; border-radius: 4px; flex-basis: 48%; }
+        .bank-data p { margin: 5px 0; font-size: 14px; }
+        .invoice-table-output { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .invoice-table-output th, .invoice-table-output td { border: 1px solid #000; padding: 8px; text-align: left; }
+        .invoice-table-output th { background-color: #ccc; }
+        .invoice-table-output .output-amount { text-align: right; }
+        .output-footer { display: flex; justify-content: space-between; margin-top: 20px; align-items: flex-start; }
+        .output-totals { width: 300px; }
+        .output-totals .total-row { border-top: 1px solid #000; }
+        .signature-block { margin-top: 30px; text-align: right; }
+        
+        /* Print/PDF Specific Styles */
+        @media print {
+            body { background-color: #fff; }
+            .container, .button-group, .input-group, #invoice-input-form, .words-section { display: none !important; }
+            #invoice-output { display: block !important; border: none; padding: 0; margin: 0; box-shadow: none; }
+            .invoice-table-output th, .invoice-table-output td { border: 1px solid #000; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Freelancer Invoice Generator</h1>
+
+        <div id="invoice-input-form">
+            <h2>Your Details (Invoice Issuer)</h2>
+            <div class="input-group">
+                <div class="input-item"><label for="issuer-name">Your Name/Company</label><input type="text" id="issuer-name" value="[Your Name Here]" required></div>
+                <div class="input-item"><label for="issuer-address">Your Address</label><textarea id="issuer-address" rows="2">[Your Full Address Here]</textarea></div>
+                <div class="input-item"><label for="issuer-pan">PAN Card No.</label><input type="text" id="issuer-pan" value="ABCDE1234F"></div>
+                <div class="input-item"><label for="issuer-account">Bank A/C No.</label><input type="text" id="issuer-account" value="1234567890"></div>
+                <div class="input-item"><label for="issuer-ifsc">IFSC Code</label><input type="text" id="issuer-ifsc" value="ABCD0001234"></div>
+            </div>
+
+            <h2>Invoice Details</h2>
+            <div class="input-group">
+                <div class="input-item"><label for="invoice-date">Invoice Date</label><input type="date" id="invoice-date" value="2025-10-05" required></div>
+                <div class="input-item"><label for="invoice-number">Invoice Number</label><input type="text" id="invoice-number" value="INV-2025-001" required></div>
+            </div>
+
+            <h2>Recipient Details</h2>
+            <div class="input-group">
+                <div class="input-item"><label>Company Name</label><input type="text" value="Redcoupons Private Limited" readonly></div>
+                <div class="input-item"><label>Address</label><textarea rows="2" readonly>Ward No. 29, Pani Tanki Ke Pass, Nokha, Bikaner, Nokha, Rajasthan, India, 334803</textarea></div>
+            </div>
+
+            <h2>Invoice Particulars</h2>
+            <table id="invoice-items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Description</th>
+                        <th style="width: 15%;">Qty</th>
+                        <th style="width: 20%;">Price (₹)</th>
+                        <th style="width: 25%;">Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="invoice-items-body">
+                    <tr class="item-row">
+                        <td><input type="text" class="description" placeholder="Service Description" value="Consulting Services for October 2025"></td>
+                        <td><input type="number" class="qty" value="1" min="1"></td>
+                        <td><input type="number" class="price" value="50000" min="0" step="0.01"></td>
+                        <td class="amount">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="button-group" style="text-align: left;">
+                <button class="btn btn-add" onclick="addItemRow()">+ Add Item</button>
+            </div>
+
+            <div class="invoice-totals">
+                <div class="total-row"><span>Sub Total:</span> <span id="sub-total-input">₹0.00</span></div>
+                <div class="total-row"><span>**Total Amount:**</span> <span id="grand-total-input">**₹0.00**</span></div>
+            </div>
+
+            <div class="words-section">
+                <p>Total Amount in Words:</p>
+                <p id="total-in-words">**Zero Rupees Only**</p>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-generate" onclick="generateInvoicePDF()">Generate Invoice PDF & Download</button>
+            </div>
+        </div>
+
+        <div id="invoice-output">
+            <h2>TAX INVOICE</h2>
+            
+            <div class="invoice-header">
+                <div class="issuer-details">
+                    <h3>Invoice From (Freelancer)</h3>
+                    <strong id="output-issuer-name"></strong>
+                    <p id="output-issuer-address"></p>
+                    <p>PAN: <span id="output-issuer-pan"></span></p>
+                </div>
+                <div class="recipient-details">
+                    <h3>Invoice To (Client)</h3>
+                    <strong>Redcoupons Private Limited</strong>
+                    <p>Ward No. 29, Pani Tanki Ke Pass, Nokha, Bikaner, Nokha, Rajasthan, India, 334803</p>
+                </div>
+            </div>
+
+            <div class="invoice-details">
+                <div class="invoice-data">
+                    <p><strong>Invoice Number:</strong> <span id="output-invoice-number"></span></p>
+                    <p><strong>Invoice Date:</strong> <span id="output-invoice-date"></span></p>
+                </div>
+                <div class="bank-data">
+                    <p><strong>Bank Details:</strong></p>
+                    <p>A/C No: <span id="output-account"></span></p>
+                    <p>IFSC Code: <span id="output-ifsc"></span></p>
+                </div>
+            </div>
+            
+            <table class="invoice-table-output">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 45%;">Description</th>
+                        <th style="width: 15%; text-align: right;">Qty</th>
+                        <th style="width: 20%; text-align: right;">Price (₹)</th>
+                        <th style="width: 15%; text-align: right;">Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="output-items-body">
+                    </tbody>
+            </table>
+
+            <div class="output-footer">
+                <div class="output-words">
+                    <p>Amount Chargeable (in words):</p>
+                    <p><strong><span id="output-total-in-words"></span></strong></p>
+                </div>
+                <div class="output-totals">
+                    <div class="total-row"><span>**Total Amount:**</span> <span id="output-grand-total">**₹0.00**</span></div>
+                </div>
+            </div>
+
+            <div class="signature-block">
+                <br><br>
+                <p>For: <span id="output-signature-name"></span></p>
+                <p>Authorised Signatory</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Core Functions ---
+
+        /**
+         * Calculates the total amount for an item row.
+         * @param {HTMLElement} row - The table row element.
+         */
+        function calculateRowTotal(row) {
+            const qty = parseFloat(row.querySelector('.qty').value) || 0;
+            const price = parseFloat(row.querySelector('.price').value) || 0;
+            const amount = qty * price;
+            row.querySelector('.amount').textContent = amount.toFixed(2);
+            calculateGrandTotal();
+        }
+
+        /**
+         * Calculates the grand total of all items.
+         */
+        function calculateGrandTotal() {
+            let subTotal = 0;
+            const itemRows = document.querySelectorAll('#invoice-items-body .item-row');
+            itemRows.forEach(row => {
+                const amountText = row.querySelector('.amount').textContent;
+                subTotal += parseFloat(amountText) || 0;
+            });
+
+            // Update display totals
+            document.getElementById('sub-total-input').textContent = `₹${subTotal.toFixed(2)}`;
+            document.getElementById('grand-total-input').textContent = `**₹${subTotal.toFixed(2)}**`;
+
+            // Convert to words and update display
+            const words = numberToWords.toWords(subTotal);
+            document.getElementById('total-in-words').innerHTML = `**${words.toUpperCase()} RUPEES ONLY**`;
+        }
+
+        /**
+         * Adds a new item row to the table.
+         */
+        function addItemRow() {
+            const tbody = document.getElementById('invoice-items-body');
+            const newRow = document.createElement('tr');
+            newRow.classList.add('item-row');
+            newRow.innerHTML = `
+                <td><input type="text" class="description" placeholder="Service Description"></td>
+                <td><input type="number" class="qty" value="1" min="1"></td>
+                <td><input type="number" class="price" value="0" min="0" step="0.01"></td>
+                <td class="amount">0.00</td>
+            `;
+            tbody.appendChild(newRow);
+            addEventListenersToRow(newRow);
+            calculateGrandTotal(); // Recalculate totals
+        }
+
+        /**
+         * Attaches change event listeners to quantity and price inputs in a row.
+         * @param {HTMLElement} row - The table row element.
+         */
+        function addEventListenersToRow(row) {
+            const qtyInput = row.querySelector('.qty');
+            const priceInput = row.querySelector('.price');
+            const handler = () => calculateRowTotal(row);
+            qtyInput.addEventListener('input', handler);
+            priceInput.addEventListener('input', handler);
+        }
+
+        /**
+         * Populates the hidden invoice output structure with form data.
+         */
+        function populateInvoiceOutput() {
+            // 1. Get Input Values
+            const issuerName = document.getElementById('issuer-name').value;
+            const invoiceDate = document.getElementById('invoice-date').value;
+            
+            // 2. Populate Header Details
+            document.getElementById('output-issuer-name').textContent = issuerName;
+            document.getElementById('output-issuer-address').textContent = document.getElementById('issuer-address').value;
+            document.getElementById('output-issuer-pan').textContent = document.getElementById('issuer-pan').value;
+            document.getElementById('output-account').textContent = document.getElementById('issuer-account').value;
+            document.getElementById('output-ifsc').textContent = document.getElementById('issuer-ifsc').value;
+            document.getElementById('output-invoice-number').textContent = document.getElementById('invoice-number').value;
+            document.getElementById('output-invoice-date').textContent = new Date(invoiceDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('output-signature-name').textContent = issuerName;
+
+            // 3. Populate Items Table
+            const outputBody = document.getElementById('output-items-body');
+            outputBody.innerHTML = ''; // Clear previous items
+
+            const itemRows = document.querySelectorAll('#invoice-items-body .item-row');
+            let itemCounter = 1;
+            itemRows.forEach(row => {
+                const description = row.querySelector('.description').value;
+                const qty = row.querySelector('.qty').value;
+                const price = parseFloat(row.querySelector('.price').value).toFixed(2);
+                const amount = row.querySelector('.amount').textContent;
+
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${itemCounter++}</td>
+                    <td>${description}</td>
+                    <td class="output-amount">${qty}</td>
+                    <td class="output-amount">${price}</td>
+                    <td class="output-amount">${amount}</td>
+                `;
+                outputBody.appendChild(newRow);
+            });
+            
+            // 4. Populate Totals and Words
+            const grandTotal = document.getElementById('grand-total-input').textContent;
+            const wordsInCaps = document.getElementById('total-in-words').textContent;
+            
+            document.getElementById('output-grand-total').textContent = grandTotal;
+            document.getElementById('output-total-in-words').textContent = wordsInCaps;
+        }
+
+        /**
+         * Generates the PDF from the populated invoice-output element.
+         */
+        function generateInvoicePDF() {
+            // 1. Ensure latest totals are calculated
+            calculateGrandTotal();
+
+            // 2. Populate the output container
+            populateInvoiceOutput();
+
+            // 3. Get the element to convert
+            const element = document.getElementById('invoice-output');
+            
+            // 4. Configure html2pdf options
+            const options = {
+                margin: 10,
+                filename: `Invoice_${document.getElementById('invoice-number').value}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // 5. Generate and download the PDF
+            html2pdf().set(options).from(element).save();
+        }
+
+        // --- Third-party library for number-to-words conversion (included here for simplicity) ---
+        // A minimal, self-contained implementation of a number-to-words utility.
+        const numberToWords = (function () {
+            const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
+            const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+            const ntw = function (num) {
+                if ((num = num.toString()).length > 9) return 'overflow';
+                const n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+                if (!n) return;
+                let str = '';
+                str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
+                str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
+                str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
+                str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
+                str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + '' : '';
+                return str.trim();
+            };
+
+            return {
+                toWords: function (num) {
+                    const integer = Math.floor(num);
+                    const decimal = Math.round((num - integer) * 100);
+                    let result = ntw(integer);
+                    if (decimal > 0) {
+                        result += ' and ' + ntw(decimal) + ' paisa';
+                    }
+                    return result || 'Zero';
+                }
+            };
+        })();
+
+        // --- Initial Setup ---
+        window.onload = function() {
+            // Add event listeners for the first row on load
+            document.querySelectorAll('#invoice-items-body .item-row').forEach(addEventListenersToRow);
+            
+            // Calculate initial totals
+            calculateGrandTotal();
+        };
+
+    </script>
+
+</body>
+</html>
