@@ -1,594 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" 
-        integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" 
-        crossorigin="anonymous" 
-        referrerpolicy="no-referrer">
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-    <style>
-        /* --- A4 Page/Print Configuration (Tight Margins for A4 Fit) --- */
-        @page {
-            size: A4;
-            margin: 0;
-        }
-
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 10px; /* Reduced overall padding */
-            background-color: #f4f4f9; 
-            font-size: 9pt; /* Smaller font for better A4 fit */
-        }
-        .container { 
-            max-width: 900px; 
-            margin: 0 auto; 
-            background-color: #fff; 
-            padding: 20px; 
-            border-radius: 4px; 
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
-        }
-        
-        /* --- Input Form Styles --- */
-        #invoice-input-form h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 15px; font-size: 12pt; }
-        .input-group { margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 10px; }
-        .input-item { flex: 1 1 45%; min-width: 200px; }
-        label { display: block; margin-bottom: 3px; font-weight: bold; color: #555; font-size: 9pt;}
-        input[type="text"], input[type="date"], input[type="number"], textarea {
-            width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box;
-            font-size: 13px;
-        }
-        .btn { padding: 8px 15px; border: none; border-radius: 3px; cursor: pointer; font-weight: bold; font-size: 10pt; }
-        .btn-generate { background-color: #007bff; color: white; margin-left: 10px; }
-        .btn-add { background-color: #5cb85c; color: white; }
-        
-        /* --- Invoice Output Area (Fixed A4 Dimensions) --- */
-        #invoice-output { 
-            display: none; 
-            box-sizing: border-box;
-            width: 210mm; /* A4 Width */
-            min-height: 297mm; /* A4 Height */
-            margin: 0 auto;
-            border: none; 
-            padding: 0; 
-            background-color: #fff;
-        }
-        
-        /* NEW: Smaller margins (5mm) on the printed document sides */
-        .section-padding { padding: 0 5mm; } 
-
-        /* Header Section */
-        .header-bg {
-            background-color: #1a4d80; 
-            color: white;
-            padding: 8mm 5mm; 
-            display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: center;
-        }
-        .header-bg h2 {
-            font-size: 20pt; /* Smaller font */
-            margin: 0;
-            font-weight: bold;
-        }
-        .header-bg .invoice-no {
-            font-size: 9pt;
-            font-weight: bold;
-            text-align: right;
-            border: 1px solid white;
-            padding: 3px 8px;
-            border-radius: 3px;
-        }
-
-        /* Address Section (Tighter Spacing) */
-        .address-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 5mm; /* Reduced gap */
-            padding: 5mm 5mm 0 5mm;
-        }
-        .address-section div {
-            padding: 3px;
-            border: 1px solid #eee; /* Added light border for definition */
-        }
-        .address-section h3 {
-            font-size: 8pt;
-            font-weight: bold;
-            margin: 0;
-            color: #1a4d80;
-        }
-        .address-section p { margin: 1px 0; font-size: 8pt; }
-        .issuer-details { text-align: right; }
-
-        /* Meta Data (Date and PAN) */
-        .meta-data {
-            padding: 3mm 5mm 5mm 5mm;
-            border-bottom: 1px solid #ccc;
-        }
-        .meta-data p { margin: 2px 0; font-weight: bold; font-size: 8pt; }
-        .meta-data-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr; /* 3 columns for date, PAN, etc. */
-            gap: 5mm;
-        }
-
-        /* Items Table Output */
-        .invoice-table-output { 
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 5px;
-        }
-        .invoice-table-output thead th { 
-            background-color: #1a4d80;
-            color: white; 
-            padding: 6px; /* Reduced padding */
-            font-weight: normal; 
-            font-size: 8pt;
-            text-align: left;
-        }
-        .invoice-table-output td { 
-            border: 1px solid #ddd; 
-            padding: 5px; /* Reduced padding */
-            font-size: 8pt;
-            height: 18px; /* Tighter row height */
-        }
-        .invoice-table-output .output-amount, .output-qty, .output-price { text-align: right; }
-
-        /* Footer Layout */
-        .total-and-footer {
-            display: grid;
-            grid-template-columns: 3fr 1fr; 
-            column-gap: 5mm;
-            padding: 0 5mm;
-        }
-
-        /* Total Block */
-        .output-totals {
-            grid-column: 2;
-            width: 100%;
-            text-align: right;
-        }
-        .output-totals .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            font-size: 9pt;
-            border-top: 1px solid #ccc;
-        }
-        .output-totals .total-row:last-child {
-            font-size: 10pt;
-            color: #1a4d80;
-            font-weight: bold;
-            border-top: 2px solid #1a4d80;
-            padding-top: 6px;
-        }
-
-        /* Words & Notes */
-        .notes-and-payment {
-            grid-column: 1;
-            text-align: left;
-            padding-right: 5mm;
-            font-size: 8pt;
-        }
-        .notes-and-payment h4 {
-            font-size: 9pt;
-            color: #1a4d80;
-            margin: 10px 0 3px 0;
-            font-weight: bold;
-        }
-        .thank-you {
-            font-family: 'Dancing Script', cursive;
-            font-size: 16pt; /* Smaller font */
-            color: #1a4d80;
-            margin-top: 5mm;
-            text-align: center;
-        }
-
-        /* Signature Block (Tighter Spacing) */
-        .signature-block { 
-            padding: 0 5mm; 
-            margin-top: 15mm; 
-            text-align: right; 
-        }
-        /* NEW: Signature Image Styling */
-        .signature-image {
-            max-width: 50mm;
-            max-height: 15mm;
-            margin-bottom: 5px;
-            display: block;
-            margin-left: auto;
-        }
-        .manual-signature-line { 
-            border-bottom: 1px solid #333; 
-            width: 40mm; /* Fixed width */
-            margin-left: auto;
-            margin-bottom: 5px;
-        }
-        .signature-block p { 
-            margin: 0; 
-            font-size: 7pt; 
-        }
-        .signature-name { font-weight: bold; font-size: 8pt; margin-top: 2px;}
-
-        /* --- Print/PDF Specific Styles (Crucial for A4 Alignment) --- */
-        @media print {
-            body { 
-                background-color: #fff; 
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .container, .button-group, #invoice-input-form, .words-section { 
-                display: none !important; 
-            }
-            #invoice-output { 
-                display: block !important; 
-                margin: 0;
-                box-shadow: none;
-                width: 210mm;
-                min-height: 297mm;
-            }
-            .invoice-table-output td { 
-                border: 1px solid #000;
-            }
-            .output-totals .total-row:last-child {
-                border-top: 2px solid #000;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  body { font-family: 'Arial', sans-serif; background: #f5f7fa; padding: 20px; color: #333; }
+  h2 { text-align: center; }
+  form { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+  label { display: block; margin-top: 10px; font-weight: bold; }
+  input, textarea { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  th { background: #0a2e6c; color: #fff; }
+  #invoice { background: #fff; padding: 40px; margin: auto; border-radius: 10px; width: 210mm; min-height: 297mm; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .header { text-align: center; margin-bottom: 30px; }
+  .footer { text-align: right; margin-top: 30px; font-weight: bold; }
+  .sign { margin-top: 50px; text-align: right; }
+  .thankyou { text-align: center; font-size: 20px; font-weight: bold; color: #0a2e6c; margin-top: 30px; }
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Freelancer Invoice Generator</h1>
+<h2>Freelancer Invoice Generator</h2>
+<form id="invoiceForm">
+  <label>Invoice Issuer Name:</label>
+  <input type="text" id="issuerName" required>
 
-        <div id="invoice-input-form">
-            <h2>Your Details (Issuer - "From")</h2>
-            <div class="input-group">
-                <div class="input-item"><label for="issuer-name">Name/Company</label><input type="text" id="issuer-name" placeholder="Your Name or Company" required></div>
-                <div class="input-item"><label for="issuer-pan">PAN Card No.</label><input type="text" id="issuer-pan" placeholder="PAN Number"></div>
-                <div class="input-item" style="flex: 1 1 100%;"><label for="issuer-address">Address</label><textarea id="issuer-address" rows="2" placeholder="Your Address"></textarea></div>
-            </div>
+  <label>Address:</label>
+  <textarea id="issuerAddress" required></textarea>
 
-            <h2>Recipient Details (Bill To)</h2>
-            <div class="input-group">
-                <div class="input-item"><label for="recipient-company">Company Name</label><input type="text" id="recipient-company" placeholder="e.g. Redcoupons Private Limited" required></div>
-                <div class="input-item"><label for="recipient-cin">CIN</label><input type="text" id="recipient-cin" placeholder="CIN Number (Optional)"></div>
-                <div class="input-item" style="flex: 1 1 100%;"><label for="recipient-address">Address</label><textarea id="recipient-address" rows="2" placeholder="Recipient's Address"></textarea></div>
-            </div>
+  <label>PAN Card:</label>
+  <input type="text" id="pan" value="XXXXXXXXXX">
 
-            <h2>Invoice & Payment Details</h2>
-            <div class="input-group">
-                <div class="input-item"><label for="invoice-number">Invoice Number</label><input type="text" id="invoice-number" placeholder="INV-2025-001" required></div>
-                <div class="input-item"><label for="invoice-date">Invoice Date</label><input type="date" id="invoice-date" required></div>
-                <div class="input-item"><label for="issuer-bank">Bank Name</label><input type="text" id="issuer-bank" placeholder="e.g. HDFC Bank"></div>
-                <div class="input-item"><label for="issuer-account">Bank A/C No.</label><input type="text" id="issuer-account" placeholder="Account Number"></div>
-                <div class="input-item"><label for="issuer-ifsc">IFSC Code</label><input type="text" id="issuer-ifsc" placeholder="IFSC Code"></div>
-                <div class="input-item"><label for="signature-date">Signature Date (Date of Invoice)</label><input type="date" id="signature-date" required></div>
-            </div>
+  <label>Bank Name:</label>
+  <input type="text" id="bankName" required>
 
-            <h2>Signatory and Signature</h2>
-            <div class="input-group">
-                 <div class="input-item"><label for="signatory-name">Signatory Name</label><input type="text" id="signatory-name" placeholder="Name for signature line"></div>
-                 <div class="input-item"><label for="signature-image-url">Signature Image URL (Optional)</label><input type="text" id="signature-image-url" placeholder="Paste direct image URL for digital signature"></div>
-            </div>
+  <label>Account Number:</label>
+  <input type="text" id="accountNumber" value="XXXXXXXXXXXX">
 
+  <label>IFSC Code:</label>
+  <input type="text" id="ifsc" value="XXXX0000000">
 
-            <h2>Invoice Particulars</h2>
-            <table id="invoice-items-table">
-                <thead>
-                    <tr>
-                        <th style="width: 40%;">Description</th>
-                        <th style="width: 15%;">Qty</th>
-                        <th style="width: 20%;">Price (₹)</th>
-                        <th style="width: 25%;">Amount (₹)</th>
-                    </tr>
-                </thead>
-                <tbody id="invoice-items-body">
-                    <tr class="item-row">
-                        <td><input type="text" class="description" placeholder="Service Description"></td>
-                        <td><input type="number" class="qty" value="1" min="1"></td>
-                        <td><input type="number" class="price" value="0" min="0" step="0.01"></td>
-                        <td class="amount">0.00</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="button-group" style="text-align: left;">
-                <button class="btn btn-add" onclick="addItemRow()">+ Add Item</button>
-            </div>
+  <label>Invoice Date:</label>
+  <input type="date" id="invoiceDate" required>
 
-            <div class="invoice-totals">
-                <div class="total-row"><span>Sub Total:</span> <span id="sub-total-input">₹0.00</span></div>
-                <div class="total-row"><span>**Total Amount:**</span> <span id="grand-total-input">**₹0.00**</span></div>
-            </div>
+  <label>Invoice Number:</label>
+  <input type="text" id="invoiceNumber" placeholder="Leave blank if not available">
 
-            <div class="words-section">
-                <p>Total Amount in Words:</p>
-                <p id="total-in-words">**Zero Rupees Only**</p>
-            </div>
+  <h3>Service Details</h3>
+  <table id="itemsTable">
+    <tr>
+      <th>Description</th>
+      <th>Qty</th>
+      <th>Price</th>
+      <th>Amount</th>
+    </tr>
+    <tr>
+      <td><input type="text" value="Online Content Writing for Month /2025" class="desc"></td>
+      <td><input type="number" value="1" class="qty"></td>
+      <td><input type="number" value="0" class="price"></td>
+      <td><input type="number" value="0" class="amount" readonly></td>
+    </tr>
+  </table>
+  <button type="button" onclick="addRow()">+ Add Row</button>
+  <br><br>
+  <button type="button" onclick="generateInvoice()">Generate Invoice PDF</button>
+</form>
 
-            <div class="button-group" style="margin-top: 15px;">
-                <button class="btn btn-generate" onclick="generateInvoicePDF()">1. Generate PDF & Download</button>
-                <button class="btn btn-generate" onclick="window.print()">2. Print (Browser Dialog)</button>
-            </div>
-        </div>
-        
-        <div id="invoice-output">
-            
-            <div class="header-bg section-padding">
-                <h2>TAX INVOICE</h2>
-                <div class="invoice-no">NO: <span id="output-invoice-number"></span></div>
-            </div>
+<div id="invoice" style="display:none;">
+  <div class="header">
+    <h1>INVOICE</h1>
+    <p><strong>Invoice No:</strong> <span id="showInvoiceNumber"></span><br>
+    <strong>Date:</strong> <span id="showInvoiceDate"></span></p>
+  </div>
 
-            <div class="address-section">
-                <div class="recipient-details">
-                    <h3>Bill To:</h3>
-                    <strong><span id="output-recipient-company"></span></strong>
-                    <p>CIN: <span id="output-recipient-cin"></span></p>
-                    <p id="output-recipient-address"></p>
-                </div>
-                <div class="issuer-details">
-                    <h3>From:</h3>
-                    <strong id="output-issuer-name"></strong>
-                    <p id="output-issuer-address"></p>
-                </div>
-            </div>
+  <p><strong>Bill To:</strong><br>
+  Redcoupons Private Limited<br>
+  Ward No. 29, Pani Tanki Ke Pass,<br>
+  Nokha, Bikaner, Nokha, Rajasthan, India, 334803<br>
+  CIN: U73100RJ2024PTC098563</p>
 
-            <div class="meta-data section-padding">
-                <div class="meta-data-grid">
-                    <p>Date: <span id="output-invoice-date"></span></p>
-                    <p>PAN: <span id="output-issuer-pan"></span></p>
-                    <p></p> 
-                </div>
-            </div>
+  <p><strong>From:</strong><br>
+  <span id="showIssuerName"></span><br>
+  <span id="showIssuerAddress"></span><br>
+  PAN: <span id="showPAN"></span></p>
 
-            <table class="invoice-table-output section-padding">
-                <thead>
-                    <tr>
-                        <th style="width: 50%;">Description</th>
-                        <th style="width: 10%; text-align: right;">Qty</th>
-                        <th style="width: 20%; text-align: right;">Price (₹)</th>
-                        <th style="width: 20%; text-align: right;">Total (₹)</th>
-                    </tr>
-                </thead>
-                <tbody id="output-items-body">
-                    </tbody>
-            </table>
+  <table id="invoiceTable"></table>
 
-            <div class="total-and-footer">
-                <div class="notes-and-payment">
-                    <h4>Amount Chargeable (in words):</h4>
-                    <p style="margin-top: 5px; font-weight: bold;"><span id="output-total-in-words"></span></p>
+  <p><strong>Total Amount:</strong> ₹<span id="totalAmount"></span></p>
+  <p><strong>Amount in Words:</strong> <span id="amountWords"></span></p>
 
-                    <h4>Payment Information:</h4>
-                    <p>Bank: <span id="output-bank-name"></span></p>
-                    <p>A/C No: <span id="output-account"></span></p>
-                    <p>IFSC: <span id="output-ifsc"></span></p>
-                    
-                    <h4 style="margin-top: 10px;">Notes:</h4>
-                    <p style="border-bottom: 1px solid #ddd; width: 100%; padding-bottom: 5px;">Payment due within 7 days of invoice date.</p>
-                </div>
+  <p><strong>Bank Details:</strong><br>
+  Bank Name: <span id="showBankName"></span><br>
+  A/C Number: <span id="showAccountNumber"></span><br>
+  IFSC: <span id="showIFSC"></span></p>
 
-                <div class="output-totals">
-                    <div class="total-row"><span>Sub Total:</span> <span id="output-sub-total">₹0.00</span></div>
-                    <div class="total-row"><span>**Total Amount:**</span> <span id="output-grand-total">**₹0.00**</span></div>
-                </div>
-            </div>
-            
-            <p class="thank-you">Thank You!</p>
+  <div class="sign">
+    <p>__________________________<br>Signature of Issuer</p>
+  </div>
 
-            <div class="signature-block">
-                <img id="output-signature-image" class="signature-image" alt="Authorised Signature" style="display: none;">
-                
-                <div id="output-manual-signature" class="manual-signature-line"></div>
-                
-                <p class="signature-name">For: <span id="output-signatory-name"></span></p>
-                <p>Date: <span id="output-signature-date"></span></p>
-                <p>Authorised Signatory</p>
-            </div>
-        </div>
-    </div>
+  <div class="thankyou">Thank You!</div>
+</div>
 
-    <script>
-        // --- Core Functions ---
-        function calculateRowTotal(row) {
-            const qty = parseFloat(row.querySelector('.qty').value) || 0;
-            const price = parseFloat(row.querySelector('.price').value) || 0;
-            const amount = qty * price;
-            row.querySelector('.amount').textContent = amount.toFixed(2);
-            calculateGrandTotal();
-        }
+<script>
+function addRow() {
+  const table = document.getElementById("itemsTable");
+  const row = table.insertRow();
+  row.innerHTML = `
+    <td><input type="text" class="desc"></td>
+    <td><input type="number" value="1" class="qty"></td>
+    <td><input type="number" value="0" class="price"></td>
+    <td><input type="number" value="0" class="amount" readonly></td>`;
+}
 
-        function calculateGrandTotal() {
-            let subTotal = 0;
-            const itemRows = document.querySelectorAll('#invoice-items-body .item-row');
-            itemRows.forEach(row => {
-                const amountText = row.querySelector('.amount').textContent;
-                subTotal += parseFloat(amountText) || 0;
-            });
+function numberToWords(num) {
+  const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b = ['','', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  if ((num = num.toString()).length > 9) return 'Overflow';
+  let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+  if (!n) return; let str = '';
+  str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + ' Crore ' : '';
+  str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + ' Lakh ' : '';
+  str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + ' Thousand ' : '';
+  str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + ' Hundred ' : '';
+  str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + ' ' : '';
+  return str + 'Rupees Only';
+}
 
-            // Update input totals
-            document.getElementById('sub-total-input').textContent = `₹${subTotal.toFixed(2)}`;
-            document.getElementById('grand-total-input').textContent = `**₹${subTotal.toFixed(2)}**`;
+function generateInvoice() {
+  const issuerName = document.getElementById("issuerName").value;
+  const issuerAddress = document.getElementById("issuerAddress").value;
+  const pan = document.getElementById("pan").value;
+  const bankName = document.getElementById("bankName").value;
+  const accountNumber = document.getElementById("accountNumber").value;
+  const ifsc = document.getElementById("ifsc").value;
+  const invoiceDate = document.getElementById("invoiceDate").value;
+  const invoiceNumber = document.getElementById("invoiceNumber").value;
 
-            // Convert to words and update display
-            const words = numberToWords.toWords(subTotal);
-            document.getElementById('total-in-words').innerHTML = `**${words.toUpperCase()} RUPEES ONLY**`;
-        }
+  let total = 0;
+  let invoiceTable = `<tr><th>Description</th><th>Qty</th><th>Price</th><th>Amount</th></tr>`;
+  document.querySelectorAll("#itemsTable tr").forEach((row, index) => {
+    if (index === 0) return;
+    const desc = row.querySelector(".desc").value;
+    const qty = parseFloat(row.querySelector(".qty").value);
+    const price = parseFloat(row.querySelector(".price").value);
+    const amount = qty * price;
+    row.querySelector(".amount").value = amount.toFixed(2);
+    total += amount;
+    invoiceTable += `<tr><td>${desc}</td><td>${qty}</td><td>₹${price.toFixed(2)}</td><td>₹${amount.toFixed(2)}</td></tr>`;
+  });
 
-        function addItemRow() {
-            const tbody = document.getElementById('invoice-items-body');
-            const newRow = document.createElement('tr');
-            newRow.classList.add('item-row');
-            newRow.innerHTML = `
-                <td><input type="text" class="description" placeholder="Service Description"></td>
-                <td><input type="number" class="qty" value="1" min="1"></td>
-                <td><input type="number" class="price" value="0" min="0" step="0.01"></td>
-                <td class="amount">0.00</td>
-            `;
-            tbody.appendChild(newRow);
-            addEventListenersToRow(newRow);
-            calculateGrandTotal(); 
-        }
+  document.getElementById("showIssuerName").innerText = issuerName;
+  document.getElementById("showIssuerAddress").innerText = issuerAddress;
+  document.getElementById("showPAN").innerText = pan;
+  document.getElementById("showBankName").innerText = bankName;
+  document.getElementById("showAccountNumber").innerText = accountNumber;
+  document.getElementById("showIFSC").innerText = ifsc;
+  document.getElementById("showInvoiceDate").innerText = invoiceDate;
+  document.getElementById("showInvoiceNumber").innerText = invoiceNumber;
+  document.getElementById("invoiceTable").innerHTML = invoiceTable;
+  document.getElementById("totalAmount").innerText = total.toFixed(2);
+  document.getElementById("amountWords").innerText = numberToWords(Math.round(total));
 
-        function addEventListenersToRow(row) {
-            const qtyInput = row.querySelector('.qty');
-            const priceInput = row.querySelector('.price');
-            const handler = () => calculateRowTotal(row);
-            qtyInput.addEventListener('input', handler);
-            priceInput.addEventListener('input', handler);
-        }
+  const invoice = document.getElementById("invoice");
+  invoice.style.display = "block";
 
-        function populateInvoiceOutput() {
-            // 1. Get Input Values
-            const invoiceDate = document.getElementById('invoice-date').value;
-            const signatureDate = document.getElementById('signature-date').value;
-            
-            // 2. Populate Header and Details
-            document.getElementById('output-issuer-name').textContent = document.getElementById('issuer-name').value;
-            document.getElementById('output-issuer-address').textContent = document.getElementById('issuer-address').value;
-            document.getElementById('output-issuer-pan').textContent = document.getElementById('issuer-pan').value || 'N/A';
-            document.getElementById('output-account').textContent = document.getElementById('issuer-account').value || 'N/A';
-            document.getElementById('output-ifsc').textContent = document.getElementById('issuer-ifsc').value || 'N/A';
-            document.getElementById('output-bank-name').textContent = document.getElementById('issuer-bank').value || 'N/A';
-            document.getElementById('output-invoice-number').textContent = document.getElementById('invoice-number').value;
-            
-            document.getElementById('output-recipient-company').textContent = document.getElementById('recipient-company').value;
-            document.getElementById('output-recipient-cin').textContent = document.getElementById('recipient-cin').value || 'N/A';
-            document.getElementById('output-recipient-address').innerHTML = document.getElementById('recipient-address').value.replace(/\n/g, '<br>');
-            document.getElementById('output-signatory-name').textContent = document.getElementById('signatory-name').value || document.getElementById('issuer-name').value;
-            
-            // Handle Signature Image
-            const sigUrl = document.getElementById('signature-image-url').value;
-            const sigImage = document.getElementById('output-signature-image');
-            const manualLine = document.getElementById('output-manual-signature');
-            
-            if (sigUrl) {
-                sigImage.src = sigUrl;
-                sigImage.style.display = 'block';
-                manualLine.style.display = 'none';
-            } else {
-                sigImage.style.display = 'none';
-                manualLine.style.display = 'block';
-            }
+  const opt = {
+    margin: 10,
+    filename: `Invoice-${invoiceNumber || 'Redcoupons'}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
 
-            // Format Dates
-            const dateFormatter = new Intl.DateTimeFormat('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('output-invoice-date').textContent = dateFormatter.format(new Date(invoiceDate));
-            document.getElementById('output-signature-date').textContent = dateFormatter.format(new Date(signatureDate));
-            
-            // 3. Populate Items Table
-            const outputBody = document.getElementById('output-items-body');
-            outputBody.innerHTML = ''; 
-
-            const itemRows = document.querySelectorAll('#invoice-items-body .item-row');
-            itemRows.forEach(row => {
-                const description = row.querySelector('.description').value;
-                const qty = row.querySelector('.qty').value;
-                const price = parseFloat(row.querySelector('.price').value).toFixed(2);
-                const amount = row.querySelector('.amount').textContent;
-
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                    <td>${description}</td>
-                    <td class="output-amount output-qty">${qty}</td>
-                    <td class="output-amount output-price">${price}</td>
-                    <td class="output-amount">${amount}</td>
-                `;
-                outputBody.appendChild(newRow);
-            });
-            
-            // 4. Populate Totals
-            document.getElementById('output-sub-total').textContent = document.getElementById('sub-total-input').textContent;
-            document.getElementById('output-grand-total').textContent = document.getElementById('grand-total-input').textContent;
-            // Only one "Amount in Words" field in the output
-            document.getElementById('output-total-in-words').textContent = document.getElementById('total-in-words').textContent;
-        }
-
-        /**
-         * Generates the PDF, includes the fix for blank PDF generation.
-         */
-        function generateInvoicePDF() {
-            calculateGrandTotal();
-            populateInvoiceOutput();
-
-            const element = document.getElementById('invoice-output');
-            
-            // **PDF FIX:** Temporarily make the element visible (Crucial for html2pdf to render hidden content)
-            element.style.display = 'block';
-
-            const options = {
-                margin: 0, 
-                filename: `Invoice_${document.getElementById('invoice-number').value || 'New'}.pdf`, 
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    logging: true, 
-                    dpi: 192, 
-                    letterRendering: true,
-                    useCORS: true 
-                },
-                jsPDF: { 
-                    unit: 'mm', 
-                    format: 'a4', 
-                    orientation: 'portrait' 
-                }
-            };
-
-            html2pdf().set(options).from(element).save().then(() => {
-                // **PDF FIX:** Hide the element again after the PDF is generated/downloaded
-                element.style.display = 'none';
-            });
-        }
-
-        // --- Third-party library for number-to-words conversion (INCLUDED FOR COMPLETENESS) ---
-        const numberToWords = (function () {
-            const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
-            const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-            const ntw = function (num) {
-                if ((num = num.toString()).length > 9) return 'overflow';
-                const n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-                if (!n) return;
-                let str = '';
-                str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
-                str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
-                str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
-                str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
-                str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + '' : '';
-                return str.trim();
-            };
-
-            return {
-                toWords: function (num) {
-                    const integer = Math.floor(num);
-                    const decimal = Math.round((num - integer) * 100);
-                    let result = ntw(integer);
-                    if (decimal > 0) {
-                        result += ' and ' + ntw(decimal) + ' paisa';
-                    }
-                    return result || 'Zero';
-                }
-            };
-        })();
-
-        // --- Initial Setup ---
-        window.onload = function() {
-            // Initialize with default data for empty fields
-            document.getElementById('issuer-name').value = 'Your Company Name';
-            document.getElementById('issuer-address').value = '123 Main Street, City, State, 12345';
-            document.getElementById('recipient-company').value = 'Recipient Company Name';
-            document.getElementById('recipient-address').value = '456 Business Park, Town, State, 67890';
-            document.getElementById('invoice-date').valueAsDate = new Date();
-            document.getElementById('signature-date').valueAsDate = new Date();
-
-            document.querySelectorAll('#invoice-items-body .item-row').forEach(addEventListenersToRow);
-            calculateGrandTotal();
-        };
-
-    </script>
+  html2pdf().from(invoice).set(opt).save().then(() => {
+    invoice.style.display = "none";
+  });
+}
+</script>
 
 </body>
 </html>
