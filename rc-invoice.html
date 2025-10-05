@@ -187,12 +187,14 @@
     <div style="padding:10px;">
         <table style="width:100%;border:none;">
             <tr>
-                <td style="border:none;">
-                    <strong>Invoice</strong><br>
-                    Date: <span id="pdfDate"></span><br>
-                    Invoice No: <span id="pdfInvNo"></span>
+                <td style="border:none;vertical-align:top;width:50%;">
+                    <strong>From:</strong><br>
+                    <span id="pdfIssuerName"></span><br>
+                    <span id="pdfIssuerAddress"></span><br>
+                    PAN: <span id="pdfPan"></span>
                 </td>
-                <td style="border:none;text-align:right;">
+                <td style="border:none;text-align:right;width:50%;vertical-align:top;">
+                    <strong>Bill To:</strong><br>
                     <strong>Redcoupons Private Limited</strong><br>
                     Ward No. 29, Pani Tanki Ke Pass, Nokha, Bikaner,<br>
                     Nokha, Rajasthan, India, 334803<br>
@@ -200,7 +202,17 @@
                 </td>
             </tr>
         </table>
-
+        <div style="text-align:center;margin:20px 0 10px 0;">
+            <span style="font-size:2.2em;font-weight:bold;letter-spacing:2px;">INVOICE</span>
+        </div>
+        <table style="width:100%;border:none;">
+            <tr>
+                <td style="border:none;">
+                    Date: <span id="pdfDate"></span><br>
+                    Invoice No: <span id="pdfInvNo"></span>
+                </td>
+            </tr>
+        </table>
         <table style="width:100%;margin-top:15px;">
             <thead>
                 <tr>
@@ -218,21 +230,20 @@
                 </tr>
             </tfoot>
         </table>
-
         <div style="margin-top:15px;">
             <strong>Total Amount (in words): </strong><span id="pdfWords"></span>
         </div>
-
         <div style="margin-top:20px;">
             <strong>Payment Information:</strong><br>
             Bank: <span id="pdfBank"></span><br>
-            A/C No: <span id="pdfAcc"></span><br>
-            IFSC: <span id="pdfIfsc"></span><br>
-            PAN: <span id="pdfPan"></span>
+            Account No: <span id="pdfAcc"></span><br>
+            IFSC Code: <span id="pdfIfsc"></span><br>
         </div>
-
-        <div class="sign-box">
-            <div>Signature of Issuer</div>
+        <div style="margin-top:40px;display:flex;justify-content:flex-end;align-items:center;">
+            <div style="text-align:right;">
+                For <span id="pdfIssuerNameSign"></span><br>
+                <span style="display:inline-block;margin-top:30px;border-top:1px solid #000;width:180px;">Authorized Signature</span>
+            </div>
         </div>
     </div>
 </div>
@@ -296,16 +307,19 @@
     /* ---- PDF Generation ---- */
     function generatePDF() {
         // Fill PDF area
+        document.getElementById('pdfIssuerName').textContent = document.getElementById('issuerName').value;
+        document.getElementById('pdfIssuerAddress').textContent = document.getElementById('issuerAddress').value;
+        document.getElementById('pdfPan').textContent = document.getElementById('pan').value;
+        document.getElementById('pdfBank').textContent = document.getElementById('bankName').value;
+        document.getElementById('pdfAcc').textContent = document.getElementById('accNo').value;
+        document.getElementById('pdfIfsc').textContent = document.getElementById('ifsc').value;
+        document.getElementById('pdfIssuerNameSign').textContent = document.getElementById('issuerName').value;
+
+        // Fill invoice date and number
         document.getElementById('pdfDate').textContent = document.getElementById('invDate').value || new Date().toISOString().split('T')[0];
         let invNo = document.getElementById('invNo').value.trim();
         if (!invNo) invNo = 'INV-' + Date.now().toString().slice(-6);
         document.getElementById('pdfInvNo').textContent = invNo;
-
-        // Issuer info
-        document.getElementById('pdfBank').textContent = document.getElementById('bankName').value;
-        document.getElementById('pdfAcc').textContent = document.getElementById('accNo').value;
-        document.getElementById('pdfIfsc').textContent = document.getElementById('ifsc').value;
-        document.getElementById('pdfPan').textContent = document.getElementById('pan').value;
 
         // Items
         const pdfItems = document.getElementById('pdfItems');
@@ -348,7 +362,8 @@
             x: 10,
             y: 10,
             width: 190, // A4 width minus margins
-            windowWidth: 800
+            windowWidth: 800,
+            autoPaging: 'text',
         });
     }
 
