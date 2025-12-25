@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Deal Viewer v3 - with Negative Keywords</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
+        h1 { color: #2c3e50; text-align: center; }
+        .controls { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+        .control-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        input, select, button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        button { background-color: #3498db; color: white; border: none; cursor: pointer; transition: background 0.3s; font-weight: bold; }
+        button:hover { background-color: #2980b9; }
+        button.clear-btn { background-color: #e74c3c; }
+        button.clear-btn:hover { background-color: #c0392b; }
+        #deal-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .deal-card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; display: flex; flex-direction: column; transition: transform 0.2s; }
+        .deal-card:hover { transform: translateY(-3px); }
+        .deal-title { font-size: 1.1em; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
+        .deal-meta { font-size: 0.85em; color: #7f8c8d; margin-bottom: 5px; }
+        .deal-price { font-size: 1.2em; font-weight: bold; color: #27ae60; margin: 10px 0; }
+        .deal-link { margin-top: auto; text-align: center; background: #3498db; color: white; text-decoration: none; padding: 8px; border-radius: 4px; display: block; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75em; font-weight: bold; text-transform: uppercase; margin-right: 5px; }
+        .badge-store { background: #eee; color: #666; }
+        .negative-input { border: 2px solid #fab1a0; }
+    </style>
+</head>
+<body>
+
+    <h1>CSV Deal Viewer v3</h1>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="csvFile">Upload CSV</label>
+            <input type="file" id="csvFile" accept=".csv">
+        </div>
+        
+        <div class="control-group">
+            <label for="search">Search Keywords</label>
+            <input type="text" id="search" placeholder="e.g. Sony, Laptop...">
+        </div>
+
+        <div class="control-group">
+            <label for="negativeKeywords" style="color: #d63031;">Negative Keywords (Hide these)</label>
+            <input type="text" id="negativeKeywords" class="negative-input" placeholder="e.g. Refurbished, Case, Used...">
+        </div>
+
+        <div class="control-group">
+            <label for="storeFilter">Store</label>
+            <select id="storeFilter"><option value="">All Stores</option></select>
+        </div>
+
+        <div class="control-group">
+            <label for="sortOrder">Sort By</label>
+            <select id="sortOrder">
+                <option value="default">Default</option>
+                <option value="priceAsc">Price: Low to High</option>
+                <option value="priceDesc">Price: High to Low</option>
+                <option value="newest">Newest First</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <button onclick="applyFilters()">Apply Filters</button>
+            <button class="clear-btn" style="margin-top:5px" onclick="clearFilters()">Clear All</button>
+        </div>
+    </div>
+
+    <div id="status" style="text-align: center; margin-bottom: 10px; color: #7f8c8d;"></div>
+    <div id="deal-list"></div>
+
+    <script>
+        let allDeals = [];
+
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    allDeals = results.data;
+                    populateStoreFilter(allDeals);
+                    applyFilters();
+                }
+            });
+        });
+
+        function populateStoreFilter(deals) {
+            const storeSelect = document.getElementById('storeFilter');
+            const stores = [...new Set(deals.map(d => d.Store || d.store).filter(Boolean))];
+            storeSelect.innerHTML = '<option value="">All Stores</option>';
+            stores.forEach(store => {
+                const opt = document.createElement('option');
+                opt.value = store;
+                opt.textContent = store;
+                storeSelect.appendChild(opt);
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const negativeInput = document.getElementById('negativeKeywords').value.toLowerCase();
+            const storeFilter = document.getElementById('storeFilter').value;
+            const sortOrder = document.getElementById('sortOrder').value;
+
+            // Prepare negative keywords array
+            const negativeKeywords = negativeInput.split(',')
+                                                .map(k => k.trim())
+                                                .filter(k => k.length > 0);
+
+            let filtered = allDeals.filter(deal => {
+                const name = (deal.Title || deal.Name || deal.title || "").toLowerCase();
+                const store = (deal.Store || deal.store || "");
+                
+                // 1. Search Keyword Match
+                const matchesSearch = name.includes(searchTerm);
+                
+                // 2. Negative Keyword Match (Exclude if any negative keyword found)
+                const containsNegative = negativeKeywords.some(keyword => name.includes(keyword));
+                
+                // 3. Store Match
+                const matchesStore = storeFilter === "" || store === storeFilter;
+
+                return matchesSearch && !containsNegative && matchesStore;
+            });
+
+            // Sorting
+            if (sortOrder === 'priceAsc') {
+                filtered.sort((a, b) => parseFloat(a.Price || 0) - parseFloat(b.Price || 0));
+            } else if (sortOrder === 'priceDesc') {
+                filtered.sort((a, b) => parseFloat(b.Price || 0) - parseFloat(a.Price || 0));
+            }
+
+            renderDeals(filtered);
+        }
+
+        function renderDeals(deals) {
+            const container = document.getElementById('deal-list');
+            const status = document.getElementById('status');
+            container.innerHTML = '';
+            status.textContent = `Showing ${deals.length} deals`;
+
+            deals.forEach(deal => {
+                const card = document.createElement('div');
+                card.className = 'deal-card';
+                
+                const title = deal.Title || deal.Name || deal.title || 'No Title';
+                const price = deal.Price || deal.price || 'N/A';
+                const store = deal.Store || deal.store || 'Unknown';
+                const link = deal.Link || deal.URL || deal.url || '#';
+                const date = deal.Date || deal.date || '';
+
+                card.innerHTML = `
+                    <div class="deal-title">${title}</div>
+                    <div class="deal-meta">
+                        <span class="badge badge-store">${store}</span>
+                        ${date ? `<span>📅 ${date}</span>` : ''}
+                    </div>
+                    <div class="deal-price">${price}</div>
+                    <a href="${link}" class="deal-link" target="_blank">View Deal</a>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('search').value = '';
+            document.getElementById('negativeKeywords').value = '';
+            document.getElementById('storeFilter').value = '';
+            document.getElementById('sortOrder').value = 'default';
+            applyFilters();
+        }
+    </script>
+</body>
+</html>
