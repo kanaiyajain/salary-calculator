@@ -1,180 +1,505 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Deal Viewer v3 - with Negative Keywords</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <title>CSV Deal Viewer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
-        h1 { color: #2c3e50; text-align: center; }
-        .controls { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
-        .control-group { display: flex; flex-direction: column; }
-        label { margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
-        input, select, button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-        button { background-color: #3498db; color: white; border: none; cursor: pointer; transition: background 0.3s; font-weight: bold; }
-        button:hover { background-color: #2980b9; }
-        button.clear-btn { background-color: #e74c3c; }
-        button.clear-btn:hover { background-color: #c0392b; }
-        #deal-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .deal-card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 15px; display: flex; flex-direction: column; transition: transform 0.2s; }
-        .deal-card:hover { transform: translateY(-3px); }
-        .deal-title { font-size: 1.1em; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
-        .deal-meta { font-size: 0.85em; color: #7f8c8d; margin-bottom: 5px; }
-        .deal-price { font-size: 1.2em; font-weight: bold; color: #27ae60; margin: 10px 0; }
-        .deal-link { margin-top: auto; text-align: center; background: #3498db; color: white; text-decoration: none; padding: 8px; border-radius: 4px; display: block; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75em; font-weight: bold; text-transform: uppercase; margin-right: 5px; }
-        .badge-store { background: #eee; color: #666; }
-        .negative-input { border: 2px solid #fab1a0; }
+        body {
+            background: #f8f9fa;
+        }
+
+        .card-img-top {
+            max-height: 140px;
+            width: 100%;
+            object-fit: contain;
+            background: #f4f4f4;
+        }
+
+        .card-img-large {
+            max-height: 140px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            min-height: 2.5em;
+            font-weight: 500;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+        }
+
+        .card {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .card-body {
+            padding: 0.75rem 0.5rem 0.5rem 0.5rem;
+        }
+
+        .search-bar {
+            max-width: 400px;
+            margin: 1.5rem auto;
+        }
+
+        .filter-bar {
+            max-width: 900px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .card-columns {
+            column-count: 1;
+        }
+
+        @media (min-width: 576px) {
+            .card-columns {
+                column-count: 2;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .card-columns {
+                column-count: 4;
+            }
+        }
+
+        #pagination {
+            margin: 2rem 0 1rem;
+        }
+
+        #pagination ul.pagination {
+            flex-wrap: wrap;
+        }
+
+        #pagination .page-link {
+            min-width: 80px;
+            text-align: center;
+        }
+
+        #pageJumpInput {
+            max-width: 160px !important;
+            min-width: 120px;
+            display: inline-block;
+        }
+
+        #pageJumpInput::placeholder {
+            font-size: 1rem;
+        }
+
+        .input-group.mb-2.justify-content-center {
+            margin-bottom: 1rem !important;
+        }
+
+        .highlight-highest {
+            color: #d9534f;
+            font-weight: bold;
+        }
+
+        .highlight-lowest {
+            color: #5cb85c;
+            font-weight: bold;
+        }
+
+        .highlight-average {
+            color: #0275d8;
+            font-weight: bold;
+        }
+
+        .highlight-discount {
+            color: #f0ad4e;
+            font-weight: bold;
+        }
+
+        .highlight-price {
+            color: #fff;
+            background-color: #5cb85c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .highlight-average-price-diff {
+            color: #555;
+            font-weight: bold;
+        }
+
+        .copy-btn {
+            margin-left: 0.5rem;
+            font-size: 0.95em;
+            padding: 0.15rem 0.6rem;
+            min-width: 40px;
+        }
+
+        .btn-buy-wide {
+            min-width: 110px;
+        }
     </style>
 </head>
+
 <body>
-
-    <h1>CSV Deal Viewer v3</h1>
-
-    <div class="controls">
-        <div class="control-group">
-            <label for="csvFile">Upload CSV</label>
-            <input type="file" id="csvFile" accept=".csv">
+    <div class="container py-4">
+        <h1 class="text-center mb-4">CSV Deal Viewer</h1>
+        <div class="text-center mb-4">
+            <input type="file" id="csvFile" accept=".csv" class="form-control-file d-inline-block"
+                style="max-width:300px;">
         </div>
-        
-        <div class="control-group">
-            <label for="search">Search Keywords</label>
-            <input type="text" id="search" placeholder="e.g. Sony, Laptop...">
+        <div class="search-bar input-group mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by Name, Code, Store...">
+            <div class="input-group-append">
+                <button class="btn btn-primary" id="clearSearch" type="button">Clear</button>
+            </div>
         </div>
-
-        <div class="control-group">
-            <label for="negativeKeywords" style="color: #d63031;">Negative Keywords (Hide these)</label>
-            <input type="text" id="negativeKeywords" class="negative-input" placeholder="e.g. Refurbished, Case, Used...">
+        <div class="filter-bar row mb-3">
+            <div class="col-md-3 mb-2">
+                <input type="number" id="minPrice" class="form-control" placeholder="Min Price">
+            </div>
+            <div class="col-md-3 mb-2">
+                <input type="number" id="maxPrice" class="form-control" placeholder="Max Price">
+            </div>
+            <div class="col-md-3 mb-2">
+                <select id="storeSelect" class="form-control" style="height:auto;">
+                    <option value="">All Stores</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-2 d-flex align-items-center">
+                <label for="discountRange" class="mr-2 mb-0" style="white-space:nowrap;">Discount:</label>
+                <input type="range" id="discountRange" min="0" max="100" step="1" value="0" class="custom-range"
+                    style="flex:1;">
+                <span id="discountRangeValue" class="ml-2" style="min-width:48px;display:inline-block;">0%+</span>
+            </div>
+            <div class="col-md-3 mb-2">
+                <select id="sellerNameSelect" class="form-control" style="height:auto;">
+                    <option value="">All Sellers</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-2">
+                <select id="sortSelect" class="form-control" style="height:auto;">
+                    <option value="default">Sort: Default</option>
+                    <option value="name-asc">Name ↑</option>
+                    <option value="name-desc">Name ↓</option>
+                    <option value="date-asc">Date ↑</option>
+                    <option value="date-desc">Date ↓</option>
+                    <option value="price-asc">Price ↑</option>
+                    <option value="price-desc">Price ↓</option>
+                    <option value="average-asc">Average ↑</option>
+                    <option value="average-desc">Average ↓</option>
+                    <option value="avg-price-diff-desc">Avg - Price ↓</option>
+                    <option value="avg-price-diff-asc">Avg - Price ↑</option>
+                    <option value="avg-price-diff-pct-desc">Avg - Price % ↓</option>
+                    <option value="avg-price-diff-pct-asc">Avg - Price % ↑</option>
+                </select>
+            </div>
+            <div class="col-md-6 mb-2">
+                <input type="text" id="negativeKeywords" class="form-control" placeholder="Negative Keywords (comma separated)">
+            </div>
+            <div class="col-md-6 mb-2 d-flex align-items-center">
+                <label for="dateMin" class="mr-2 mb-0" style="white-space:nowrap;">Date ≥</label>
+                <input type="datetime-local" id="dateMin" class="form-control mr-2" placeholder="Date & Time ≥">
+                <label for="dateMax" class="mr-2 mb-0" style="white-space:nowrap;">Date ≤</label>
+                <input type="datetime-local" id="dateMax" class="form-control" placeholder="Date & Time ≤">
+            </div>
+            <div class="col-md-12 mb-2">
+                <button class="btn btn-success btn-block" id="applyFilters">Apply Filters</button>
+            </div>
         </div>
-
-        <div class="control-group">
-            <label for="storeFilter">Store</label>
-            <select id="storeFilter"><option value="">All Stores</option></select>
-        </div>
-
-        <div class="control-group">
-            <label for="sortOrder">Sort By</label>
-            <select id="sortOrder">
-                <option value="default">Default</option>
-                <option value="priceAsc">Price: Low to High</option>
-                <option value="priceDesc">Price: High to Low</option>
-                <option value="newest">Newest First</option>
-            </select>
-        </div>
-
-        <div class="control-group">
-            <button onclick="applyFilters()">Apply Filters</button>
-            <button class="clear-btn" style="margin-top:5px" onclick="clearFilters()">Clear All</button>
-        </div>
+        <nav id="pagination" aria-label="Page navigation" class="d-none">
+            <ul class="pagination justify-content-center"></ul>
+        </nav>
+        <div id="cardContainer" class="row"></div>
     </div>
-
-    <div id="status" style="text-align: center; margin-bottom: 10px; color: #7f8c8d;"></div>
-    <div id="deal-list"></div>
-
     <script>
-        let allDeals = [];
-
-        document.getElementById('csvFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    allDeals = results.data;
-                    populateStoreFilter(allDeals);
-                    applyFilters();
+        // CSV parsing utility
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            const headers = lines[0].split(',');
+            return lines.slice(1).map(line => {
+                const values = [];
+                let cur = '', inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') inQuotes = !inQuotes;
+                    else if (char === ',' && !inQuotes) { values.push(cur); cur = ''; }
+                    else cur += char;
                 }
+                values.push(cur);
+                const obj = {};
+                headers.forEach((h, i) => obj[h.trim()] = (values[i] || '').replace(/^"|"$/g, ''));
+                return obj;
             });
-        });
+        }
 
-        function populateStoreFilter(deals) {
-            const storeSelect = document.getElementById('storeFilter');
-            const stores = [...new Set(deals.map(d => d.Store || d.store).filter(Boolean))];
-            storeSelect.innerHTML = '<option value="">All Stores</option>';
-            stores.forEach(store => {
-                const opt = document.createElement('option');
-                opt.value = store;
-                opt.textContent = store;
-                storeSelect.appendChild(opt);
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const pageSize = 60;
+
+        function renderCardsPage(data, page) {
+            const container = document.getElementById('cardContainer');
+            if (!data.length) {
+                container.innerHTML = '<div class="text-center text-muted col-12">No results found.</div>';
+                document.getElementById('pagination').classList.add('d-none');
+                return;
+            }
+            const start = (page - 1) * pageSize;
+            const end = Math.min(start + pageSize, data.length);
+            const pageData = data.slice(start, end);
+            
+            container.innerHTML = pageData.map((row, idx) => {
+                let buyUrl = '';
+                let storeName = row.Store;
+                if (row.Store === '1') {
+                    buyUrl = `https://www.amazon.in/dp/${row.Code}`;
+                    storeName = 'Amazon';
+                } else if (row.Store === '2') {
+                    buyUrl = `https://www.flipkart.com/a/p/b?pid=${row.Code}`;
+                    storeName = 'Flipkart';
+                }
+                
+                let highest = parseInt(row.Highest) || '-';
+                let lowest = parseInt(row.Lowest) || '-';
+                let average = parseInt(row.Average) || '-';
+                let price = parseInt(row.Price) || '-';
+                
+                let avgPriceDiff = '-';
+                if (!isNaN(row.Average) && !isNaN(row.Price)) {
+                    avgPriceDiff = (parseInt(row.Average) - parseInt(row.Price)).toLocaleString('en-IN');
+                }
+                
+                let discount = row.Discount || '-';
+                if (discount !== '-' && !isNaN(discount)) discount = parseInt(discount);
+                
+                let sellerName = row.SellerName ? row.SellerName : (row.SellerId ? 'Seller ' + row.SellerId : '-');
+                let lastPrice = row.LastPrice && !isNaN(row.LastPrice) ? formatCurrencyInt(row.LastPrice) : '-';
+                let priceDropHtml = '';
+                
+                if (lastPrice !== '-' && price !== '-' && !isNaN(row.LastPrice) && !isNaN(row.Price)) {
+                    let drop = parseInt(row.LastPrice) - parseInt(row.Price);
+                    if (drop > 0) {
+                        priceDropHtml = `<span class="ml-2 text-success" title="Price Drop"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;"><path d="M10 3v12M10 15l-4-4m4 4l4-4" stroke="#28a745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> -₹${drop.toLocaleString('en-IN')}</span>`;
+                    } else if (drop < 0) {
+                        priceDropHtml = `<span class="ml-2 text-danger" title="Price Increased"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="vertical-align:middle;"><path d="M10 17V5M10 5l-4 4m4-4l4 4" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> +₹${Math.abs(drop).toLocaleString('en-IN')}</span>`;
+                    }
+                }
+
+                const copyBtnId = `copy-btn-${page}-${idx}`;
+                return `
+            <div class="col-12 col-sm-6 col-lg-3 mb-3">
+                <div class="card shadow-sm">
+                    <img class="card-img-top card-img-large" src="${row.Image}" alt="${row.Name}" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2" title="${row.Name}">${row.Name}</h5>
+                        <div class="d-flex flex-wrap small text-muted mb-2">
+                            <div class="mr-3"><span title="Added On">${row.AddedOn}</span></div>
+                            <div class="mr-3"><span title="Seller">${sellerName}</span></div>
+                            <div class="mr-3"><span title="Store">${storeName}</span></div>
+                            <div class="mr-3"><span title="Code">${row.Code}</span></div>
+                            <div><span title="Last Price">${lastPrice !== '-' ? 'Last: ₹' + lastPrice : ''}</span>${priceDropHtml}</div>
+                        </div>
+                        <div class="d-flex flex-wrap small text-muted mb-2">
+                            <div class="mr-3 highlight-highest">₹${highest}</div>
+                            <div class="mr-3 highlight-average">₹${average}</div>
+                            <div class="mr-3 highlight-lowest">₹${lowest}</div>
+                            <div class="mr-3 highlight-average-price-diff">₹${avgPriceDiff}</div>
+                        </div>
+                        <div class="d-flex flex-wrap small text-muted mb-2">
+                            <div class="mr-3 highlight-price"><strong>₹${price}</strong></div>
+                            <div class="mr-3 highlight-discount">${discount !== '-' ? discount + '%' : '-'}</div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            ${buyUrl ? `<a href="${buyUrl}" target="_blank" class="btn btn-sm btn-primary btn-buy-wide">Buy</a>` : ''}
+                            <button class="btn btn-outline-secondary btn-sm copy-btn" id="${copyBtnId}" data-url="${buyUrl}" title="Copy product URL">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            }).join('');
+            
+            renderPagination(data.length, page);
+            
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.onclick = function () {
+                    const url = btn.getAttribute('data-url');
+                    if (url) {
+                        navigator.clipboard.writeText(url);
+                        btn.textContent = 'Copied!';
+                        setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+                    }
+                };
             });
+        }
+
+        function renderPagination(total, page) {
+            const nav = document.getElementById('pagination');
+            const ul = nav.querySelector('ul');
+            const pageCount = Math.ceil(total / pageSize);
+            if (pageCount <= 1) { nav.classList.add('d-none'); return; }
+            nav.classList.remove('d-none');
+            ul.innerHTML = '';
+
+            const prevLi = document.createElement('li');
+            prevLi.className = 'page-item' + (page === 1 ? ' disabled' : '');
+            prevLi.innerHTML = `<a class="page-link" href="#" style="font-weight:bold;">Previous</a>`;
+            prevLi.addEventListener('click', (e) => { e.preventDefault(); if(page > 1) { currentPage = page - 1; renderCardsPage(filteredData, currentPage); } });
+            ul.appendChild(prevLi);
+
+            let startPage = Math.max(1, page - 2);
+            let endPage = Math.min(pageCount, page + 2);
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = 'page-item' + (i === page ? ' active' : '');
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                li.addEventListener('click', (e) => { e.preventDefault(); currentPage = i; renderCardsPage(filteredData, currentPage); });
+                ul.appendChild(li);
+            }
+
+            const nextLi = document.createElement('li');
+            nextLi.className = 'page-item' + (page === pageCount ? ' disabled' : '');
+            nextLi.innerHTML = `<a class="page-link" href="#" style="font-weight:bold;">Next</a>`;
+            nextLi.addEventListener('click', (e) => { e.preventDefault(); if(page < pageCount) { currentPage = page + 1; renderCardsPage(filteredData, currentPage); } });
+            ul.appendChild(nextLi);
+        }
+
+        // Initialize Page Jump UI
+        const paginationNav = document.getElementById('pagination');
+        if (paginationNav && !document.getElementById('pageJumpInput')) {
+            const pageJumpDiv = document.createElement('div');
+            pageJumpDiv.className = 'input-group mb-2 justify-content-center';
+            pageJumpDiv.innerHTML = '<input id="pageJumpInput" type="number" min="1" class="form-control" style="max-width:100px;display:inline-block;" placeholder="Go to page">' +
+                '<div class="input-group-append"><button id="pageJumpBtn" class="btn btn-outline-secondary" type="button">Go</button></div>';
+            paginationNav.parentNode.insertBefore(pageJumpDiv, paginationNav.nextSibling);
+        }
+
+        function populateSellerIdSelect() {
+            const select = document.getElementById('sellerNameSelect');
+            const sellerNames = Array.from(new Set(allData.map(row => row.SellerName ? String(row.SellerName) : (row.SellerId ? 'Seller ' + row.SellerId : '')).filter(Boolean)));
+            sellerNames.sort((a, b) => a.localeCompare(b));
+            select.innerHTML = '<option value="">All Sellers</option>' + sellerNames.map(name => `<option value="${name}">${name}</option>`).join('');
+        }
+
+        function populateStoreSelect() {
+            const select = document.getElementById('storeSelect');
+            const storeMap = { '1': 'Amazon', '2': 'Flipkart' };
+            const stores = Array.from(new Set(allData.map(row => row.Store ? String(row.Store) : '').filter(Boolean)));
+            select.innerHTML = '<option value="">All Stores</option>' + stores.map(store => `<option value="${store}">${storeMap[store] || store}</option>`).join('');
+        }
+
+        function getFilteredAndSearchedData() {
+            let data = allData;
+            const minPrice = parseFloat(document.getElementById('minPrice').value);
+            const maxPrice = parseFloat(document.getElementById('maxPrice').value);
+            const selectedStore = document.getElementById('storeSelect').value.trim().toLowerCase();
+            const selectedDiscount = parseInt(document.getElementById('discountRange').value) || 0;
+            const selectedSeller = document.getElementById('sellerNameSelect').value;
+            const negativeWords = document.getElementById('negativeKeywords').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            
+            const dateMin = document.getElementById('dateMin').value ? new Date(document.getElementById('dateMin').value) : null;
+            const dateMax = document.getElementById('dateMax').value ? new Date(document.getElementById('dateMax').value) : null;
+
+            if (!isNaN(minPrice)) data = data.filter(row => parseFloat(row.Price) >= minPrice);
+            if (!isNaN(maxPrice)) data = data.filter(row => parseFloat(row.Price) <= maxPrice);
+            if (selectedStore) data = data.filter(row => (row.Store || '').toLowerCase() === selectedStore);
+            if (selectedSeller) data = data.filter(row => (row.SellerName ? String(row.SellerName) : (row.SellerId ? 'Seller ' + row.SellerId : '')) === selectedSeller);
+            if (selectedDiscount > 0) data = data.filter(row => !isNaN(row.Discount) && parseInt(row.Discount) >= selectedDiscount);
+            if (dateMin) data = data.filter(row => row.AddedOn && new Date(row.AddedOn) >= dateMin);
+            if (dateMax) data = data.filter(row => row.AddedOn && new Date(row.AddedOn) <= dateMax);
+            
+            // Search logic
+            if (searchQuery) {
+                data = data.filter(row =>
+                    (row.Name || '').toLowerCase().includes(searchQuery) ||
+                    (row.Code || '').toLowerCase().includes(searchQuery) ||
+                    (row.Store || '').toLowerCase().includes(searchQuery)
+                );
+            }
+
+            // Negative Keyword logic
+            if (negativeWords.length > 0) {
+                data = data.filter(row => {
+                    const content = `${row.Name} ${row.Code} ${row.Store}`.toLowerCase();
+                    return !negativeWords.some(word => content.includes(word));
+                });
+            }
+
+            // Sorting
+            const sortVal = document.getElementById('sortSelect').value;
+            if (sortVal !== 'default') {
+                data = [...data].sort((a, b) => {
+                    switch(sortVal) {
+                        case 'name-asc': return (a.Name || '').localeCompare(b.Name || '');
+                        case 'name-desc': return (b.Name || '').localeCompare(a.Name || '');
+                        case 'date-asc': return new Date(a.AddedOn || 0) - new Date(b.AddedOn || 0);
+                        case 'date-desc': return new Date(b.AddedOn || 0) - new Date(a.AddedOn || 0);
+                        case 'price-asc': return (parseFloat(a.Price) || 0) - (parseFloat(b.Price) || 0);
+                        case 'price-desc': return (parseFloat(b.Price) || 0) - (parseFloat(a.Price) || 0);
+                        case 'average-asc': return (parseFloat(a.Average) || 0) - (parseFloat(b.Average) || 0);
+                        case 'average-desc': return (parseFloat(b.Average) || 0) - (parseFloat(a.Average) || 0);
+                        case 'avg-price-diff-desc': return ((parseFloat(b.Average) || 0) - (parseFloat(b.Price) || 0)) - ((parseFloat(a.Average) || 0) - (parseFloat(a.Price) || 0));
+                        case 'avg-price-diff-asc': return ((parseFloat(a.Average) || 0) - (parseFloat(a.Price) || 0)) - ((parseFloat(b.Average) || 0) - (parseFloat(b.Price) || 0));
+                        case 'avg-price-diff-pct-desc': 
+                            const getPct = r => (parseFloat(r.Price) ? ((parseFloat(r.Average) - parseFloat(r.Price)) / parseFloat(r.Price)) : -Infinity);
+                            return getPct(b) - getPct(a);
+                        default: return 0;
+                    }
+                });
+            }
+            return data;
         }
 
         function applyFilters() {
-            const searchTerm = document.getElementById('search').value.toLowerCase();
-            const negativeInput = document.getElementById('negativeKeywords').value.toLowerCase();
-            const storeFilter = document.getElementById('storeFilter').value;
-            const sortOrder = document.getElementById('sortOrder').value;
-
-            // Prepare negative keywords array
-            const negativeKeywords = negativeInput.split(',')
-                                                .map(k => k.trim())
-                                                .filter(k => k.length > 0);
-
-            let filtered = allDeals.filter(deal => {
-                const name = (deal.Title || deal.Name || deal.title || "").toLowerCase();
-                const store = (deal.Store || deal.store || "");
-                
-                // 1. Search Keyword Match
-                const matchesSearch = name.includes(searchTerm);
-                
-                // 2. Negative Keyword Match (Exclude if any negative keyword found)
-                const containsNegative = negativeKeywords.some(keyword => name.includes(keyword));
-                
-                // 3. Store Match
-                const matchesStore = storeFilter === "" || store === storeFilter;
-
-                return matchesSearch && !containsNegative && matchesStore;
-            });
-
-            // Sorting
-            if (sortOrder === 'priceAsc') {
-                filtered.sort((a, b) => parseFloat(a.Price || 0) - parseFloat(b.Price || 0));
-            } else if (sortOrder === 'priceDesc') {
-                filtered.sort((a, b) => parseFloat(b.Price || 0) - parseFloat(a.Price || 0));
-            }
-
-            renderDeals(filtered);
+            filteredData = getFilteredAndSearchedData();
+            currentPage = 1;
+            renderCardsPage(filteredData, currentPage);
         }
 
-        function renderDeals(deals) {
-            const container = document.getElementById('deal-list');
-            const status = document.getElementById('status');
-            container.innerHTML = '';
-            status.textContent = `Showing ${deals.length} deals`;
+        // Event Listeners
+        document.getElementById('csvFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                allData = parseCSV(evt.target.result);
+                populateSellerIdSelect();
+                populateStoreSelect();
+                applyFilters();
+            };
+            reader.readAsText(file);
+        });
 
-            deals.forEach(deal => {
-                const card = document.createElement('div');
-                card.className = 'deal-card';
-                
-                const title = deal.Title || deal.Name || deal.title || 'No Title';
-                const price = deal.Price || deal.price || 'N/A';
-                const store = deal.Store || deal.store || 'Unknown';
-                const link = deal.Link || deal.URL || deal.url || '#';
-                const date = deal.Date || deal.date || '';
-
-                card.innerHTML = `
-                    <div class="deal-title">${title}</div>
-                    <div class="deal-meta">
-                        <span class="badge badge-store">${store}</span>
-                        ${date ? `<span>📅 ${date}</span>` : ''}
-                    </div>
-                    <div class="deal-price">${price}</div>
-                    <a href="${link}" class="deal-link" target="_blank">View Deal</a>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function clearFilters() {
-            document.getElementById('search').value = '';
-            document.getElementById('negativeKeywords').value = '';
-            document.getElementById('storeFilter').value = '';
-            document.getElementById('sortOrder').value = 'default';
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('negativeKeywords').addEventListener('input', applyFilters);
+        document.getElementById('clearSearch').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
             applyFilters();
+        });
+        document.getElementById('applyFilters').addEventListener('click', applyFilters);
+        document.getElementById('storeSelect').addEventListener('change', applyFilters);
+        document.getElementById('sellerNameSelect').addEventListener('change', applyFilters);
+        document.getElementById('sortSelect').addEventListener('change', applyFilters);
+        document.getElementById('dateMin').addEventListener('change', applyFilters);
+        document.getElementById('dateMax').addEventListener('change', applyFilters);
+        document.getElementById('discountRange').addEventListener('input', function() {
+            document.getElementById('discountRangeValue').textContent = this.value + '%+';
+            applyFilters();
+        });
+
+        document.getElementById('pageJumpBtn').addEventListener('click', function () {
+            const val = parseInt(document.getElementById('pageJumpInput').value);
+            const pageCount = Math.ceil(filteredData.length / pageSize);
+            if (!isNaN(val) && val >= 1 && val <= pageCount) {
+                currentPage = val;
+                renderCardsPage(filteredData, currentPage);
+            }
+        });
+
+        function formatCurrencyInt(val) {
+            if (val === '-' || isNaN(val)) return val;
+            return parseInt(val).toLocaleString('en-IN');
         }
     </script>
 </body>
+
 </html>
