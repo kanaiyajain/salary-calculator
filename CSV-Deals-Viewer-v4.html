@@ -15,8 +15,6 @@
         .card-body { padding: 0.75rem 0.5rem 0.5rem 0.5rem; }
         .search-bar { max-width: 400px; margin: 1.5rem auto; }
         .filter-bar { max-width: 900px; margin: 0 auto 1.5rem; }
-        @media (min-width: 576px) { .card-columns { column-count: 2; } }
-        @media (min-width: 992px) { .card-columns { column-count: 4; } }
         .pagination-container { margin: 2rem 0 1rem; }
         .pagination-container ul.pagination { flex-wrap: wrap; }
         .pagination-container .page-link { min-width: 80px; text-align: center; }
@@ -64,6 +62,12 @@
                     <option value="date-desc">Date ↓</option>
                     <option value="price-asc">Price ↑</option>
                     <option value="price-desc">Price ↓</option>
+                    <option value="average-asc">Average ↑</option>
+                    <option value="average-desc">Average ↓</option>
+                    <option value="avg-price-diff-desc">Avg - Price ↓</option>
+                    <option value="avg-price-diff-asc">Avg - Price ↑</option>
+                    <option value="avg-price-diff-pct-desc">Avg - Price % ↓</option>
+                    <option value="avg-price-diff-pct-asc">Avg - Price % ↑</option>
                 </select>
             </div>
             <div class="col-md-6 mb-2">
@@ -118,7 +122,6 @@
         function renderCardsPage(data, page) {
             const container = document.getElementById('cardContainer');
             const hiddenDisplay = document.getElementById('hiddenCountDisplay');
-            
             hiddenDisplay.textContent = hiddenByNegativeCount > 0 ? `Items hidden by negative keywords: ${hiddenByNegativeCount}` : '';
 
             if (!data.length) {
@@ -197,13 +200,8 @@
             const elements = ['paginationTop', 'paginationBottom', 'pageJumpTop', 'pageJumpBottom'];
             elements.forEach(id => {
                 const el = document.getElementById(id);
-                if (show) {
-                    el.classList.remove('d-none');
-                    el.classList.add('d-flex');
-                } else {
-                    el.classList.add('d-none');
-                    el.classList.remove('d-flex');
-                }
+                if (show) { el.classList.remove('d-none'); el.classList.add('d-flex'); }
+                else { el.classList.add('d-none'); el.classList.remove('d-flex'); }
             });
         }
 
@@ -212,24 +210,15 @@
             const ul = nav.querySelector('ul');
             const pageCount = Math.ceil(total / pageSize);
             ul.innerHTML = '';
-
             const addPage = (p, text, active = false, disabled = false) => {
                 const li = document.createElement('li');
                 li.className = `page-item ${active ? 'active' : ''} ${disabled ? 'disabled' : ''}`;
                 li.innerHTML = `<a class="page-link" href="#">${text}</a>`;
-                if (!disabled) li.onclick = (e) => { 
-                    e.preventDefault(); 
-                    currentPage = p; 
-                    renderCardsPage(filteredData, p);
-                    window.scrollTo(0,0);
-                };
+                if (!disabled) li.onclick = (e) => { e.preventDefault(); currentPage = p; renderCardsPage(filteredData, p); window.scrollTo(0,0); };
                 ul.appendChild(li);
             };
-
             addPage(page - 1, 'Previous', false, page === 1);
-            let start = Math.max(1, page - 2);
-            let end = Math.min(pageCount, page + 2);
-            for (let i = start; i <= end; i++) addPage(i, i, i === page);
+            for (let i = Math.max(1, page - 2); i <= Math.min(pageCount, page + 2); i++) addPage(i, i, i === page);
             addPage(page + 1, 'Next', false, page === pageCount);
         }
 
@@ -239,27 +228,20 @@
             container.innerHTML = `
                 <div class="input-group" style="max-width:200px;">
                     <input type="number" class="form-control pageJumpInput" min="1" max="${pageCount}" placeholder="Go to page">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-secondary jumpBtn" type="button">Go</button>
-                    </div>
-                </div>
-            `;
+                    <div class="input-group-append"><button class="btn btn-outline-secondary jumpBtn" type="button">Go</button></div>
+                </div>`;
             const input = container.querySelector('input');
             const btn = container.querySelector('button');
             const doJump = () => {
                 const val = parseInt(input.value);
-                if (val >= 1 && val <= pageCount) {
-                    currentPage = val;
-                    renderCardsPage(filteredData, val);
-                    window.scrollTo(0,0);
-                }
+                if (val >= 1 && val <= pageCount) { currentPage = val; renderCardsPage(filteredData, val); window.scrollTo(0,0); }
             };
             btn.onclick = doJump;
             input.onkeyup = (e) => { if(e.key === 'Enter') doJump(); };
         }
 
         function getFilteredAndSearchedData() {
-            let data = allData;
+            let data = [...allData];
             const minP = parseFloat(document.getElementById('minPrice').value);
             const maxP = parseFloat(document.getElementById('maxPrice').value);
             const store = document.getElementById('storeSelect').value;
@@ -267,7 +249,6 @@
             const seller = document.getElementById('sellerNameSelect').value;
             const search = document.getElementById('searchInput').value.toLowerCase();
             const neg = document.getElementById('negativeKeywords').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-            
             const dateMin = document.getElementById('dateMin').value ? new Date(document.getElementById('dateMin').value) : null;
             const dateMax = document.getElementById('dateMax').value ? new Date(document.getElementById('dateMax').value) : null;
 
@@ -280,18 +261,39 @@
             if (dateMax) data = data.filter(r => r.AddedOn && new Date(r.AddedOn) <= dateMax);
             if (search) data = data.filter(r => `${r.Name} ${r.Code}`.toLowerCase().includes(search));
 
-            // Calculate hidden count
             const preNegLength = data.length;
-            if (neg.length) {
-                data = data.filter(r => !neg.some(w => `${r.Name} ${r.Code} ${r.Store}`.toLowerCase().includes(w)));
-            }
+            if (neg.length) data = data.filter(r => !neg.some(w => `${r.Name} ${r.Code} ${r.Store}`.toLowerCase().includes(w)));
             hiddenByNegativeCount = preNegLength - data.length;
 
             const sortVal = document.getElementById('sortSelect').value;
-            if (sortVal === 'price-asc') data.sort((a,b) => parseFloat(a.Price) - parseFloat(b.Price));
-            else if (sortVal === 'price-desc') data.sort((a,b) => parseFloat(b.Price) - parseFloat(a.Price));
-            else if (sortVal === 'name-asc') data.sort((a,b) => (a.Name || '').localeCompare(b.Name || ''));
-            else if (sortVal === 'date-desc') data.sort((a,b) => new Date(b.AddedOn || 0) - new Date(a.AddedOn || 0));
+            data.sort((a, b) => {
+                const valA = parseFloat(a.Price) || 0;
+                const valB = parseFloat(b.Price) || 0;
+                const avgA = parseFloat(a.Average) || 0;
+                const avgB = parseFloat(b.Average) || 0;
+
+                switch (sortVal) {
+                    case 'name-asc': return (a.Name || '').localeCompare(b.Name || '');
+                    case 'name-desc': return (b.Name || '').localeCompare(a.Name || '');
+                    case 'date-asc': return new Date(a.AddedOn || 0) - new Date(b.AddedOn || 0);
+                    case 'date-desc': return new Date(b.AddedOn || 0) - new Date(a.AddedOn || 0);
+                    case 'price-asc': return valA - valB;
+                    case 'price-desc': return valB - valA;
+                    case 'average-asc': return avgA - avgB;
+                    case 'average-desc': return avgB - avgA;
+                    case 'avg-price-diff-desc': return (avgB - valB) - (avgA - valA);
+                    case 'avg-price-diff-asc': return (avgA - valA) - (avgB - valB);
+                    case 'avg-price-diff-pct-desc':
+                        const pctA = valA ? (avgA - valA) / valA : -Infinity;
+                        const pctB = valB ? (avgB - valB) / valB : -Infinity;
+                        return pctB - pctA;
+                    case 'avg-price-diff-pct-asc':
+                        const pctA_asc = valA ? (avgA - valA) / valA : Infinity;
+                        const pctB_asc = valB ? (avgB - valB) / valB : Infinity;
+                        return pctA_asc - pctB_asc;
+                    default: return 0;
+                }
+            });
 
             return data;
         }
@@ -324,7 +326,6 @@
                 const stores = Array.from(new Set(allData.map(r => r.Store))).filter(Boolean);
                 document.getElementById('storeSelect').innerHTML = '<option value="">All Stores</option>' + 
                     stores.map(s => `<option value="${s}">${storeMap[s] || s}</option>`).join('');
-
                 const sellers = Array.from(new Set(allData.map(r => r.SellerName || (r.SellerId ? 'Seller ' + r.SellerId : '')))).filter(Boolean).sort();
                 document.getElementById('sellerNameSelect').innerHTML = '<option value="">All Sellers</option>' + 
                     sellers.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -343,7 +344,6 @@
         };
 
         document.getElementById('clearSearch').onclick = () => { document.getElementById('searchInput').value = ''; applyFilters(); };
-        document.getElementById('applyFilters').onclick = applyFilters;
     </script>
 </body>
 </html>
