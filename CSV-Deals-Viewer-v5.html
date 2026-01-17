@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,8 +13,8 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
         }
-        .container { background: #f8f9fa; padding: 1rem; border-radius: 0px; margin: 0; width: 100%; max-width: 100%; box-shadow: none; display: flex; flex-direction: column; }
         h1 { color: #333; font-weight: 700; font-size: 1.75rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 0.75rem; }
         
         .file-upload-section { background: white; padding: 0.75rem 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 0.75rem; text-align: center; }
@@ -34,24 +35,33 @@
         
         .filter-bar { 
             background: white; 
-            max-width: 90%; 
-            margin: 0 auto 0.75rem; 
-            padding: 1rem;
-            border-radius: 8px;
+            max-width: 100%; 
+            margin: 0 0 0.3rem 0; 
+            padding: 0.4rem;
+            border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .filter-bar input, .filter-bar select { 
-            border: 2px solid #e0e0e0; 
-            border-radius: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 3px; 
             transition: all 0.3s ease;
-            font-size: 0.95rem;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.3rem !important;
+            height: auto !important;
+            min-height: 24px;
+            margin: 0;
+            overflow: hidden;
+            word-break: break-word;
         }
         .filter-bar input:focus, .filter-bar select:focus { 
             border-color: #667eea; 
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             outline: none;
         }
-        .filter-bar label { font-weight: 600; color: #333; font-size: 0.8rem; }
+        .filter-bar label { font-weight: 600; color: #333; font-size: 0.65rem; margin-bottom: 0.1rem; margin-right: 0.2rem; white-space: nowrap; }
+        .filter-bar h5 { font-size: 0.75rem; margin-bottom: 0.2rem; margin-top: 0.2rem; padding: 0.1rem 0; line-height: 1; }
+        .filter-bar .col-md-3, .filter-bar .col-md-6, .filter-bar .col-md-12 { margin-bottom: 0.2rem; padding: 0.15rem; }
+        .filter-bar .row { margin: 0 -0.15rem; }
         .filter-bar .custom-range { height: 6px; border-radius: 3px; }
         .filter-bar .custom-range::-webkit-slider-thumb { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; }
         
@@ -59,9 +69,12 @@
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             border: none;
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: 4px;
             transition: all 0.3s ease;
-            padding: 0.75rem 1.5rem;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            height: 26px;
+            line-height: 1;
         }
         .btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4); }
         
@@ -113,8 +126,6 @@
             border-radius: 8px;
         }
         
-        #cardContainer { margin: 0.5rem auto; max-width: 100%; padding: 0 1rem; }
-        
         .card { 
             padding: 0.4rem; 
             border-radius: 8px; 
@@ -123,6 +134,7 @@
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             background: white;
+            max-width: 100%;
         }
         .card:hover { 
             transform: translateY(-4px);
@@ -137,7 +149,7 @@
             border-radius: 6px;
         }
         
-        .card-body { padding: 0.5rem; }
+        .card-body { padding: 0.5rem; overflow: hidden; }
         
         .card-title { 
             font-size: 0.85rem; 
@@ -147,6 +159,11 @@
             color: #333;
             line-height: 1.2;
             margin-bottom: 0.3rem;
+            word-break: break-word;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
         
         .card-info { 
@@ -156,12 +173,12 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.4rem;
+            overflow: hidden;
         }
-        .card-info span { background: #f0f0f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; }
+        .card-info span { background: #f0f0f0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; word-break: break-word; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         
         .price-section { 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 0.5rem;
+            padding: 0.25rem;
             border-radius: 6px;
             margin: 0.3rem 0;
         }
@@ -181,6 +198,10 @@
             padding: 0.2rem 0.4rem;
             border-radius: 4px;
             font-weight: 500;
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
         .highlight-highest { color: #d9534f; font-weight: bold; }
@@ -268,7 +289,10 @@
             
             <h5 class="col-12 mb-3 mt-3" style="color: #333; font-weight: 700;">🏪 Store & Seller Filters</h5>
             <div class="col-md-3 mb-2"><select id="storeSelect" class="form-control" style="height:auto;"><option value="">All Stores</option></select></div>
-            <div class="col-md-3 mb-2"><select id="sellerNameSelect" class="form-control" style="height:auto;"><option value="">All Sellers</option></select></div>
+            <div class="col-md-3 mb-2">
+                <input type="text" id="sellerSearchInput" class="form-control" placeholder="🔍 Search Seller..." style="margin-bottom: 0.2rem;">
+                <select id="sellerNameSelect" class="form-control" style="height:auto;"><option value="">All Sellers</option></select>
+            </div>
             
             <h5 class="col-12 mb-3 mt-3" style="color: #333; font-weight: 700;">📊 Additional Filters</h5>
             <div class="col-md-3 mb-2 d-flex align-items-center">
@@ -406,17 +430,15 @@
                             <div class="price-row">
                                 <div class="price-item">Highest: <span class="highlight-highest">₹${highest}</span></div>
                                 <div class="price-item">Average: <span class="highlight-average">₹${average}</span></div>
+                                <div class="price-item">Lowest: <span class="highlight-lowest">₹${lowest}</span></div>
                             </div>
                             <div class="price-row">
-                                <div class="price-item">Lowest: <span class="highlight-lowest">₹${lowest}</span></div>
                                 <div class="price-item">Diff: <span class="highlight-average-price-diff">₹${avgPriceDiff}</span></div>
+                                <div class="price-item highlight-mrp">MRP: ₹${mrp}</div>
                             </div>
                             <div class="price-row mt-3 pt-3" style="border-top: 2px solid rgba(0,0,0,0.1);">
-                                <div class="price-item highlight-price" style="flex: 1;">Current: ₹${price}</div>
+                                <div class="price-item highlight-price" style="flex: 1;">₹${price}</div>
                                 <div class="price-item highlight-discount">${discount}</div>
-                            </div>
-                            <div class="price-row mt-2">
-                                <div class="price-item highlight-mrp">MRP: ₹${mrp}</div>
                             </div>
                         </div>
                         <div class="action-buttons">
@@ -572,6 +594,16 @@
                 const sellers = Array.from(new Set(allData.map(r => r.SellerName || (r.SellerId ? 'Seller ' + r.SellerId : '')))).filter(Boolean).sort();
                 document.getElementById('sellerNameSelect').innerHTML = '<option value="">All Sellers</option>' + 
                     sellers.map(s => `<option value="${s}">${s}</option>`).join('');
+                
+                // Add seller search functionality
+                document.getElementById('sellerSearchInput').addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const options = document.getElementById('sellerNameSelect').options;
+                    for (let i = 1; i < options.length; i++) {
+                        options[i].style.display = options[i].text.toLowerCase().includes(searchTerm) ? '' : 'none';
+                    }
+                });
+                
                 applyFilters();
             };
             reader.readAsText(e.target.files[0]);
