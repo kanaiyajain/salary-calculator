@@ -437,9 +437,14 @@
                                 <div class="price-item highlight-mrp">MRP: ₹${mrp}</div>
                             </div>
                             <div class="price-row mt-3 pt-3" style="border-top: 2px solid rgba(0,0,0,0.1);">
-                                <div class="price-item highlight-price" style="flex: 1;">₹${price}</div>
-                                <div class="price-item highlight-discount">${discount}</div>
-                            </div>
+    <div class="price-item highlight-price" 
+         style="flex:1; font-size: 28px; font-weight: 800;">
+        ₹${price}
+    </div>
+    <div class="price-item highlight-discount">
+        ${discount}
+    </div>
+</div>
                         </div>
                         <div class="action-buttons">
                             ${buyUrl ? `<a href="${buyUrl}" target="_blank" class="btn btn-sm btn-buy-wide">🛒 Buy</a>` : ''}
@@ -622,6 +627,7 @@
     </script>
 </body>
 </html>
+
 
 
 
