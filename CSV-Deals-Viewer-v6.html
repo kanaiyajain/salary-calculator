@@ -144,13 +144,16 @@
         /* Custom narrow columns for the top bar */
         .col-compact { padding-left: 5px; padding-right: 5px; }
         .row-compact { margin-left: -5px; margin-right: -5px; }
+        
+        /* Force Boxy Layout Center */
+        .main-container { max-width: 1140px; margin: 0 auto; padding: 0 15px; }
     </style>
 </head>
 
 <body>
 
     <div class="control-panel">
-        <div class="container-fluid">
+        <div class="main-container">
             <div class="row row-compact align-items-center mb-2">
                 <div class="col-auto col-compact">
                     <h1>🎯 Deals</h1>
@@ -201,9 +204,11 @@
                         <option value="discount-asc">Discount (Low)</option>
                         <option value="price-asc">Price (Low)</option>
                         <option value="price-desc">Price (High)</option>
+                        <option value="avg-price-diff-pct-asc">Price vs Avg % (Low)</option>
+                        <option value="avg-price-diff-pct-desc">Price vs Avg % (High)</option>
+                        <option value="avg-price-diff-desc">Best Value (Abs)</option>
                         <option value="name-asc">Name (A-Z)</option>
                         <option value="date-desc">Date (New)</option>
-                        <option value="avg-price-diff-desc">Best Value</option>
                     </select>
                 </div>
                  <div class="col-12 col-md-4 col-compact">
@@ -236,7 +241,7 @@
         </div>
     </div>
 
-    <div class="container-fluid px-4">
+    <div class="main-container">
         
         <div id="hiddenCountDisplay" class="text-center" style="display:none;"></div>
 
@@ -265,7 +270,6 @@
 
         function optimizeImageUrl(url) {
             if(!url) return '';
-            // Optimize Amazon and Flipkart image URLs for performance
             url = url.replace(/flixcart\.com\/image\/\d+\/\d+\//g, 'flixcart.com/image/250/250/');
             url = url.replace(/(\/images\/I\/[^.]+)\.jpg/g, '$1._SS250_FMwebp_.jpg');
             return url;
@@ -312,7 +316,6 @@
             const end = Math.min(start + pageSize, data.length);
             const pageData = data.slice(start, end);
 
-            // col-lg-3 = 4 cards per row
             container.innerHTML = pageData.map((row) => {
                 let buyUrl = '';
                 let storeName = row.Store;
@@ -326,7 +329,6 @@
                 let average = parseInt(row.Average) || 0;
                 let price = parseInt(row.Price) || 0;
                 let mrp = parseInt(row.MRP) || 0;
-                let diff = average > 0 && price > 0 ? (average - price) : 0;
                 let sellerName = row.SellerName || (row.SellerId ? 'Seller ' + row.SellerId : '-');
                 let discount = parseFloat(row.Discount) || 0;
                 let discDisplay = discount > 0 ? discount + '%' : '';
@@ -441,6 +443,7 @@
             data.sort((a, b) => {
                 const pA = parseFloat(a.Price)||0, pB = parseFloat(b.Price)||0;
                 const dA = parseFloat(a.Discount)||0, dB = parseFloat(b.Discount)||0;
+                const avgA = parseFloat(a.Average)||0, avgB = parseFloat(b.Average)||0;
                 
                 switch (sortVal) {
                     case 'discount-desc': return dB - dA;
@@ -451,6 +454,21 @@
                     case 'date-desc': return new Date(b.AddedOn||0) - new Date(a.AddedOn||0);
                     case 'avg-price-diff-desc': 
                         return ((parseFloat(b.Average)||0) - pB) - ((parseFloat(a.Average)||0) - pA);
+                    
+                    // NEW SORT: Percentage Difference (Low to High)
+                    // (Price - Average) / Average
+                    case 'avg-price-diff-pct-asc': {
+                        let pctA = avgA ? ((pA - avgA) / avgA) : Infinity;
+                        let pctB = avgB ? ((pB - avgB) / avgB) : Infinity;
+                        return pctA - pctB;
+                    }
+                    // NEW SORT: Percentage Difference (High to Low)
+                    case 'avg-price-diff-pct-desc': {
+                        let pctA = avgA ? ((pA - avgA) / avgA) : -Infinity;
+                        let pctB = avgB ? ((pB - avgB) / avgB) : -Infinity;
+                        return pctB - pctA;
+                    }
+
                     default: return 0;
                 }
             });
