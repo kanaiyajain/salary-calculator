@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        /* Specific colors for specific stats */
+        .stat-value.loss { color: #dc3545; }
+        .stat-value.confirmed { color: #28a745; }
+        .stat-value.tentative { color: #ffc107; }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+
+        .orders-container {
+            padding: 30px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .order-id {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .store-badge {
+            background: #ff6b00;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .order-title {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .order-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-weight: bold;
+            color: #333;
+            margin-top: 2px;
+        }
+
+        .commission-info {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .commission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .commission-item {
+            text-align: center;
+            padding: 5px;
+        }
+
+        /* Highlight FAP Loss in grid */
+        .commission-item.fap-loss {
+            background: rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+
+        .commission-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .commission-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .status-tentative {
+            background: #ffc107;
+            color: #333;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-confirmed {
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-failed {
+            background: #dc3545;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .close {
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .textarea-container {
+            margin-bottom: 20px;
+        }
+
+        .data-textarea {
+            width: 100%;
+            height: 400px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: vertical;
+        }
+
+        .data-textarea:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.info {
+            background: #17a2b8;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .file-item.selected {
+            background: #e7f3ff;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+            flex-wrap: wrap;
+        }
+
+        .file-stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .file-action-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .file-action-btn:hover {
+            background: #e9ecef;
+        }
+
+        .file-action-btn.delete:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .order-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .commission-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+                padding: 20px;
+            }
+
+            .data-textarea {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Orders Dashboard</h1>
+            <p>Track your affiliate orders and commissions</p>
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-success" onclick="showDataInput()">📋 Paste Order Data</button>
+                <button class="btn btn-primary" onclick="showApiModal()">🌐 Fetch from Server</button>
+                <button class="btn btn-primary" onclick="showSaveModal()">💾 Save Data</button>
+                <button class="btn btn-primary" onclick="showLoadModal()">📁 Load Saved Data</button>
+                <button class="btn" style="background: #dc3545; color: white;" onclick="clearData()">🗑️ Clear Data</button>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value" id="totalOrders">0</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalRevenue">₹0</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalCommission">₹0</div>
+                <div class="stat-label">Total Commission</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value tentative" id="tentativeCommission">₹0</div>
+                <div class="stat-label">Tentative Comm.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value confirmed" id="confirmedCommission">₹0</div>
+                <div class="stat-label">Confirmed Comm.</div>
+            </div>
+             <div class="stat-card">
+                <div class="stat-value loss" id="failedCommission">₹0</div>
+                <div class="stat-label">Failed Comm.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value loss" id="totalFAPLoss">₹0</div>
+                <div class="stat-label">Total FAP Loss</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" id="avgOrderValue">₹0</div>
+                <div class="stat-label">Avg Order Value</div>
+            </div>
+        </div>
+
+        <div class="orders-container">
+            <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);">
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <input type="text" id="searchInput" placeholder="🔍 Search orders by ID, title, store..." 
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;" 
+                               oninput="filterOrders()">
+                    </div>
+                    <div>
+                        <select id="sortSelect" onchange="sortOrders()" 
+                                style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; min-width: 150px;">
+                            <option value="">Sort By</option>
+                            <option value="fap-desc">📉 FAP Loss (High-Low)</option>
+                            <option value="date-desc">Date (Newest)</option>
+                            <option value="date-asc">Date (Oldest)</option>
+                            <option value="price-desc">Price (High-Low)</option>
+                            <option value="price-asc">Price (Low-High)</option>
+                            <option value="commission-desc">Commission (High-Low)</option>
+                            <option value="commission-asc">Commission (Low-High)</option>
+                            <option value="store">Store</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="filterStore" onchange="filterOrders()" 
+                                style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                            <option value="">All Stores</option>
+                            <option value="FLIPKART">Flipkart</option>
+                            <option value="AMAZON">Amazon</option>
+                            <option value="MYNTRA">Myntra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="filterStatus" onchange="filterOrders()" 
+                                style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                            <option value="">All Status</option>
+                            <option value="tentative">Tentative</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="resetFilters()" style="padding: 12px 20px;">
+                        🔄 Reset
+                    </button>
+                </div>
+                
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="color: #666; font-size: 14px;">Quick Filters:</span>
+                    <button class="btn" style="background: #17a2b8; color: white; padding: 8px 15px; font-size: 12px;" onclick="filterByDateRange(7)">Last 7 Days</button>
+                    <button class="btn" style="background: #17a2b8; color: white; padding: 8px 15px; font-size: 12px;" onclick="filterByDateRange(30)">Last 30 Days</button>
+                    <button class="btn" style="background: #17a2b8; color: white; padding: 8px 15px; font-size: 12px;" onclick="showHighCommission()">High Commission (>₹100)</button>
+                    <span id="filterStatusText" style="color: #666; font-size: 14px; margin-left: 10px;"></span>
+                </div>
+            </div>
+            
+            <div id="ordersContainer">
+                <div style="text-align: center; color: #666; padding: 40px;">
+                    <h3>No orders to display</h3>
+                    <p>Click "Paste Order Data" to add your order data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Paste Order Data</h2>
+                <span class="close" onclick="closeModal('dataModal')">&times;</span>
+            </div>
+            <div class="textarea-container">
+                <textarea 
+                    id="orderDataInput" 
+                    class="data-textarea" 
+                    placeholder='Paste your order data here as JSON array format:
+[
+    {
+        "orderid": "OIU_336049866041175100000",
+        "store": "FLIPKART",
+        "title": "Product Title",
+        "quantity": "1",
+        "price": "394",
+        "orderDate": "20-11-2025 18:26:04",
+        "commisionrate": "79",
+        "commission_status": "tentative",
+        "commission_percentage": "20",
+        "product_id": "JEAHGBNGMFZF6PGE",
+        "param2": "Category"
+    }
+]'
+                ></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: #6c757d; color: white;" onclick="closeModal('dataModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="loadOrderData()">Load Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Save Order Data</h2>
+                <span class="close" onclick="closeModal('saveModal')">&times;</span>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label for="saveFileName" style="display: block; margin-bottom: 8px; font-weight: bold;">File Name:</label>
+                <input type="text" id="saveFileName" placeholder="Enter file name (e.g., November_2025_Orders)" 
+                       style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                <div style="margin-top: 10px; color: #666; font-size: 12px;">
+                    📊 <span id="saveOrderCount">0</span> orders • 💰 <span id="saveTotalCommission">₹0</span> total commission
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: #6c757d; color: white;" onclick="closeModal('saveModal')">Cancel</button>
+                <button class="btn btn-success" onclick="saveDataWithName()">💾 Save File</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Load Saved Data</h2>
+                <span class="close" onclick="closeModal('loadModal')">&times;</span>
+            </div>
+            <div id="filesList" style="max-height: 400px; overflow-y: auto;">
+                </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: #6c757d; color: white;" onclick="closeModal('loadModal')">Cancel</button>
+                <button class="btn" style="background: #dc3545; color: white;" onclick="clearAllSavedFiles()">🗑️ Delete All Files</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="apiModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Fetch Orders from Server</h2>
+                <span class="close" onclick="closeModal('apiModal')">&times;</span>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label for="startDate" style="display: block; margin-bottom: 5px; font-weight: bold;">Start Date:</label>
+                        <input type="date" id="startDate" 
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label for="endDate" style="display: block; margin-bottom: 5px; font-weight: bold;">End Date:</label>
+                        <input type="date" id="endDate" 
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="storeSelect" style="display: block; margin-bottom: 5px; font-weight: bold;">Store:</label>
+                    <select id="storeSelect" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                        <option value="FLIPKART">Flipkart</option>
+                        <option value="AMAZON">Amazon</option>
+                        <option value="MYNTRA">Myntra</option>
+                        <option value="ALL">All Stores</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="offsetInput" style="display: block; margin-bottom: 5px; font-weight: bold;">Offset (Page):</label>
+                    <input type="number" id="offsetInput" value="1" min="1" 
+                           style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                </div>
+
+                <div id="apiStatus" style="padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none;">
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: #6c757d; color: white;" onclick="closeModal('apiModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="fetchOrdersFromAPI()" id="fetchButton">
+                    🌐 Fetch Orders
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ordersData = [];
+        let filteredOrders = [];
+        let currentSort = '';
+        let currentFilters = {
+            search: '',
+            store: '',
+            status: '',
+            dateRange: null
+        };
+
+        function calculateCommissionFromPrice(price, commissionPercentage) {
+            return Math.round((parseFloat(price) * parseFloat(commissionPercentage)) / 100);
+        }
+
+        function getCommissionAmount(commissionAmount) {
+            return parseFloat(commissionAmount);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function generateFlipkartLink(productId) {
+            return `https://www.flipkart.com/product/p/itm${productId}?pid=${productId}`;
+        }
+
+        function parseDate(dateString) {
+            const [datePart, timePart] = dateString.split(' ');
+            const [day, month, year] = datePart.split('-');
+            const [hour, minute, second] = timePart.split(':');
+            return new Date(year, month - 1, day, hour, minute, second);
+        }
+
+        function renderOrder(order) {
+            const commission = getCommissionAmount(order.commisionrate);
+            const orderValue = parseFloat(order.price) * parseInt(order.quantity);
+            const calculatedCommission = calculateCommissionFromPrice(orderValue, order.commission_percentage);
+            
+            // FAP Loss Calculation: Calculated - Actual
+            const fapLoss = calculatedCommission - commission;
+            
+            return `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-id">Order ID: ${order.orderid}</div>
+                        <div class="store-badge">${order.store}</div>
+                    </div>
+                    
+                    <div class="order-title">${order.title}</div>
+                    
+                    <div class="order-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Quantity</div>
+                            <div class="detail-value">${order.quantity}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Price</div>
+                            <div class="detail-value">${formatCurrency(order.price)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Order Value</div>
+                            <div class="detail-value">${formatCurrency(orderValue)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Order Date</div>
+                            <div class="detail-value">${order.orderDate}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                <span class="status-${order.commission_status}">${order.commission_status.toUpperCase()}</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Category</div>
+                            <div class="detail-value">${order.param2 || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="commission-info">
+                        <div class="commission-grid">
+                            <div class="commission-item">
+                                <div class="commission-value">${order.commission_percentage}%</div>
+                                <div class="commission-label">Commission Rate</div>
+                            </div>
+                            <div class="commission-item">
+                                <div class="commission-value">${formatCurrency(commission)}</div>
+                                <div class="commission-label">Commission Amount</div>
+                            </div>
+                            <div class="commission-item">
+                                <div class="commission-value">${formatCurrency(calculatedCommission)}</div>
+                                <div class="commission-label">Calculated Comm.</div>
+                            </div>
+                            <div class="commission-item fap-loss">
+                                <div class="commission-value" style="color: ${fapLoss > 0 ? '#ffeb3b' : 'white'}">${formatCurrency(fapLoss)}</div>
+                                <div class="commission-label">FAP Loss</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <a href="${generateFlipkartLink(order.product_id)}" target="_blank" class="btn btn-primary">
+                            🛒 View Product
+                        </a>
+                        <button class="btn btn-success" onclick="trackOrder('${order.orderid}')">
+                            📦 Track Order
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateStats(orders) {
+            const totalOrders = orders.length;
+            const totalRevenue = orders.reduce((sum, order) => sum + (parseFloat(order.price) * parseInt(order.quantity)), 0);
+            
+            // Initializing specific stats
+            let totalCommission = 0;
+            let tentativeComm = 0;
+            let confirmedComm = 0;
+            let failedComm = 0;
+            let totalFAPLoss = 0;
+
+            orders.forEach(order => {
+                const comm = getCommissionAmount(order.commisionrate);
+                totalCommission += comm;
+
+                // Status breakdown
+                const status = order.commission_status.toLowerCase();
+                if (status === 'tentative') {
+                    tentativeComm += comm;
+                } else if (status === 'confirmed') {
+                    confirmedComm += comm;
+                } else if (status === 'failed') {
+                    failedComm += comm;
+                }
+
+                // FAP Loss Calc
+                const orderValue = parseFloat(order.price) * parseInt(order.quantity);
+                const calculatedComm = calculateCommissionFromPrice(orderValue, order.commission_percentage);
+                totalFAPLoss += (calculatedComm - comm);
+            });
+
+            const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            // Updating DOM
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('totalCommission').textContent = formatCurrency(totalCommission);
+            document.getElementById('avgOrderValue').textContent = formatCurrency(avgOrderValue);
+            
+            // Updating New Stats
+            document.getElementById('tentativeCommission').textContent = formatCurrency(tentativeComm);
+            document.getElementById('confirmedCommission').textContent = formatCurrency(confirmedComm);
+            document.getElementById('failedCommission').textContent = formatCurrency(failedComm);
+            document.getElementById('totalFAPLoss').textContent = formatCurrency(totalFAPLoss);
+        }
+
+        function renderOrders() {
+            const ordersContainer = document.getElementById('ordersContainer');
+            const ordersToShow = filteredOrders.length > 0 || hasActiveFilters() ? filteredOrders : ordersData;
+            
+            if (ordersToShow.length === 0) {
+                const message = hasActiveFilters() ? 
+                    '<h3>No orders match your filters</h3><p>Try adjusting your search criteria</p>' :
+                    '<h3>No orders to display</h3><p>Click "Paste Order Data" to add your order data</p>';
+                
+                ordersContainer.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 40px;">
+                        ${message}
+                    </div>
+                `;
+            } else {
+                ordersContainer.innerHTML = ordersToShow.map(order => renderOrder(order)).join('');
+            }
+            
+            calculateStats(ordersToShow);
+            updateFilterStatus();
+        }
+
+        function hasActiveFilters() {
+            return currentFilters.search || currentFilters.store || currentFilters.status || currentFilters.dateRange;
+        }
+
+        function updateFilterStatus() {
+            const statusElement = document.getElementById('filterStatusText');
+            const totalOrders = ordersData.length;
+            const filteredCount = filteredOrders.length > 0 || hasActiveFilters() ? filteredOrders.length : totalOrders;
+            
+            if (hasActiveFilters()) {
+                statusElement.textContent = `Showing ${filteredCount} of ${totalOrders} orders`;
+                statusElement.style.color = '#667eea';
+                statusElement.style.fontWeight = 'bold';
+            } else {
+                statusElement.textContent = '';
+            }
+        }
+
+        // Search and Filter Functions
+        function filterOrders() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const storeFilter = document.getElementById('filterStore').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+            
+            currentFilters.search = searchTerm;
+            currentFilters.store = storeFilter;
+            currentFilters.status = statusFilter;
+            
+            filteredOrders = ordersData.filter(order => {
+                const matchesSearch = !searchTerm || 
+                    order.orderid.toLowerCase().includes(searchTerm) ||
+                    order.title.toLowerCase().includes(searchTerm) ||
+                    order.store.toLowerCase().includes(searchTerm) ||
+                    order.param2?.toLowerCase().includes(searchTerm);
+                
+                const matchesStore = !storeFilter || order.store === storeFilter;
+                const matchesStatus = !statusFilter || order.commission_status === statusFilter;
+                
+                let matchesDateRange = true;
+                if (currentFilters.dateRange) {
+                    const orderDate = parseDate(order.orderDate);
+                    const cutoffDate = new Date();
+                    cutoffDate.setDate(cutoffDate.getDate() - currentFilters.dateRange);
+                    matchesDateRange = orderDate >= cutoffDate;
+                }
+                
+                return matchesSearch && matchesStore && matchesStatus && matchesDateRange;
+            });
+            
+            renderOrders();
+        }
+
+        function filterByDateRange(days) {
+            currentFilters.dateRange = days;
+            filterOrders();
+        }
+
+        function showHighCommission() {
+            filteredOrders = ordersData.filter(order => {
+                const commission = getCommissionAmount(order.commisionrate);
+                return commission > 100;
+            });
+            renderOrders();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterStore').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('sortSelect').value = '';
+            
+            currentFilters = {
+                search: '',
+                store: '',
+                status: '',
+                dateRange: null
+            };
+            currentSort = '';
+            filteredOrders = [];
+            renderOrders();
+        }
+
+        // Sorting Functions
+        function sortOrders() {
+            const sortBy = document.getElementById('sortSelect').value;
+            currentSort = sortBy;
+            
+            if (!sortBy) {
+                renderOrders();
+                return;
+            }
+            
+            const ordersToSort = filteredOrders.length > 0 || hasActiveFilters() ? [...filteredOrders] : [...ordersData];
+            
+            ordersToSort.sort((a, b) => {
+                // Pre-calc helper for FAP loss
+                const getFAP = (order) => {
+                    const orderVal = parseFloat(order.price) * parseInt(order.quantity);
+                    const calc = calculateCommissionFromPrice(orderVal, order.commission_percentage);
+                    const actual = getCommissionAmount(order.commisionrate);
+                    return calc - actual;
+                };
+
+                switch(sortBy) {
+                    case 'fap-desc':
+                        return getFAP(b) - getFAP(a);
+                    case 'date-desc':
+                        return parseDate(b.orderDate) - parseDate(a.orderDate);
+                    case 'date-asc':
+                        return parseDate(a.orderDate) - parseDate(b.orderDate);
+                    case 'price-desc':
+                        return parseFloat(b.price) - parseFloat(a.price);
+                    case 'price-asc':
+                        return parseFloat(a.price) - parseFloat(b.price);
+                    case 'commission-desc':
+                        const commissionA = getCommissionAmount(a.commisionrate);
+                        const commissionB = getCommissionAmount(b.commisionrate);
+                        return commissionB - commissionA;
+                    case 'commission-asc':
+                        const commissionA2 = getCommissionAmount(a.commisionrate);
+                        const commissionB2 = getCommissionAmount(b.commisionrate);
+                        return commissionA2 - commissionB2;
+                    case 'store':
+                        return a.store.localeCompare(b.store);
+                    case 'status':
+                        return a.commission_status.localeCompare(b.commission_status);
+                    default:
+                        return 0;
+                }
+            });
+            
+            if (filteredOrders.length > 0 || hasActiveFilters()) {
+                filteredOrders = ordersToSort;
+            } else {
+                ordersData = ordersToSort;
+            }
+            
+            renderOrders();
+        }
+
+        function trackOrder(orderId) {
+            showNotification(`Tracking order: ${orderId}`, 'info');
+        }
+
+        // API Functions
+        function showApiModal() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+            document.getElementById('offsetInput').value = 1;
+            document.getElementById('storeSelect').value = 'FLIPKART';
+            
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.style.display = 'none';
+            statusDiv.innerHTML = '';
+            
+            document.getElementById('apiModal').style.display = 'block';
+        }
+
+        function formatDateForAPI(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}-${month}-${year}`;
+        }
+
+        async function fetchOrdersFromAPI() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const store = document.getElementById('storeSelect').value;
+            const offset = document.getElementById('offsetInput').value || 1;
+            
+            if (!startDate || !endDate) {
+                showAPIStatus('Please select both start and end dates', 'error');
+                return;
+            }
+            
+            const formattedStartDate = formatDateForAPI(startDate);
+            const formattedEndDate = formatDateForAPI(endDate);
+            
+            const baseURL = 'https://earn.pe/b2b/api/get_report.php';
+            const params = new URLSearchParams({
+                method: 'order_report',
+                start: formattedStartDate,
+                end: formattedEndDate,
+                offset: offset,
+                store: store
+            });
+            
+            const apiURL = `${baseURL}?${params.toString()}`;
+            
+            const fetchButton = document.getElementById('fetchButton');
+            const originalText = fetchButton.innerHTML;
+            fetchButton.innerHTML = '⏳ Fetching...';
+            fetchButton.disabled = true;
+            
+            showAPIStatus('Connecting to server...', 'info');
+            
+            const corsProxies = [
+                { name: 'Direct', url: '', requiresEncoding: false },
+                { name: 'CORS Anywhere', url: 'https://cors-anywhere.herokuapp.com/', requiresEncoding: false },
+                { name: 'AllOrigins', url: 'https://api.allorigins.win/get?url=', requiresEncoding: true },
+                { name: 'CORSProxy.io', url: 'https://corsproxy.io/?', requiresEncoding: true },
+                { name: 'ThingProxy', url: 'https://thingproxy.freeboard.io/fetch/', requiresEncoding: false },
+                { name: 'Proxy Server', url: 'https://cors-proxy.htmldriven.com/?url=', requiresEncoding: true }
+            ];
+            
+            for (let i = 0; i < corsProxies.length; i++) {
+                const proxy = corsProxies[i];
+                let requestURL;
+                let headers = {
+                    'Accept': 'application/json'
+                };
+                
+                if (proxy.name === 'AllOrigins') {
+                    const fullURL = `${apiURL}&auth=238Edd3069-d198F-41d89-93EB-3C5C85E198EF`;
+                    requestURL = proxy.url + encodeURIComponent(fullURL);
+                } else if (proxy.name === 'CORSProxy.io') {
+                    requestURL = `${proxy.url}${encodeURIComponent(apiURL)}`;
+                    headers['auth'] = '238Edd3069-d198F-41d89-93EB-3C5C85E198EF';
+                } else if (proxy.name === 'CORS Anywhere') {
+                    requestURL = proxy.url + apiURL;
+                    headers['auth'] = '238Edd3069-d198F-41d89-93EB-3C5C85E198EF';
+                } else if (proxy.name === 'ThingProxy') {
+                    requestURL = proxy.url + apiURL;
+                    headers['auth'] = '238Edd3069-d198F-41d89-93EB-3C5C85E198EF';
+                } else if (proxy.name === 'Proxy Server') {
+                    requestURL = proxy.url + encodeURIComponent(apiURL);
+                    headers['auth'] = '238Edd3069-d198F-41d89-93EB-3C5C85E198EF';
+                } else {
+                    requestURL = apiURL;
+                    headers['auth'] = '238Edd3069-d198F-41d89-93EB-3C5C85E198EF';
+                }
+                
+                try {
+                    showAPIStatus(`Trying ${proxy.name}... (${requestURL})`, 'info');
+                    
+                    const response = await fetch(requestURL, {
+                        method: 'GET',
+                        headers: headers,
+                        mode: 'cors'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    let data;
+                    if (proxy.name === 'AllOrigins') {
+                        const result = await response.json();
+                        if (result.status && result.status.http_code === 200) {
+                            data = JSON.parse(result.contents);
+                        } else {
+                            throw new Error('AllOrigins proxy failed');
+                        }
+                    } else {
+                        data = await response.json();
+                    }
+                    
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        ordersData = data;
+                        filteredOrders = [];
+                        resetFilters();
+                        renderOrders();
+                        closeModal('apiModal');
+                        
+                        showNotification(`Successfully fetched ${data.length} orders from ${store} (${formattedStartDate} to ${formattedEndDate})`, 'success');
+                        
+                        setTimeout(() => {
+                            const cards = document.querySelectorAll('.order-card, .stat-card');
+                            cards.forEach((card, index) => {
+                                card.style.opacity = '0';
+                                card.style.transform = 'translateY(20px)';
+                                setTimeout(() => {
+                                    card.style.transition = 'all 0.6s ease';
+                                    card.style.opacity = '1';
+                                    card.style.transform = 'translateY(0)';
+                                }, index * 50);
+                            });
+                        }, 100);
+                        
+                        return; 
+                        
+                    } else if (data && Array.isArray(data) && data.length === 0) {
+                        showAPIStatus('No orders found for the selected date range and store', 'warning');
+                        return;
+                    } else {
+                        throw new Error('Invalid response format from server');
+                    }
+                    
+                } catch (error) {
+                    console.error(`Proxy ${i} failed:`, error);
+                    if (i === corsProxies.length - 1) {
+                        let errorMessage = 'Failed to fetch data from server. ';
+                        if (error.message.includes('CORS')) {
+                            errorMessage = `All CORS bypass methods failed.`;
+                        } else {
+                            errorMessage += error.message;
+                        }
+                        showAPIStatus(errorMessage, 'error');
+                    }
+                }
+            }
+            fetchButton.innerHTML = originalText;
+            fetchButton.disabled = false;
+        }
+
+        function showAPIStatus(message, type) {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = message;
+            statusDiv.className = '';
+            
+            switch(type) {
+                case 'success':
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.color = '#155724';
+                    statusDiv.style.border = '1px solid #c3e6cb';
+                    break;
+                case 'error':
+                    statusDiv.style.background = '#f8d7da';
+                    statusDiv.style.color = '#721c24';
+                    statusDiv.style.border = '1px solid #f5c6cb';
+                    break;
+                case 'warning':
+                    statusDiv.style.background = '#fff3cd';
+                    statusDiv.style.color = '#856404';
+                    statusDiv.style.border = '1px solid #ffeaa7';
+                    break;
+                case 'info':
+                    statusDiv.style.background = '#d1ecf1';
+                    statusDiv.style.color = '#0c5460';
+                    statusDiv.style.border = '1px solid #bee5eb';
+                    break;
+            }
+        }
+
+        // File Management Functions
+        function showSaveModal() {
+            if (ordersData.length === 0) {
+                showNotification('No data to save', 'error');
+                return;
+            }
+            
+            const totalCommission = ordersData.reduce((sum, order) => {
+                const commission = getCommissionAmount(order.commisionrate);
+                return sum + commission;
+            }, 0);
+            
+            document.getElementById('saveOrderCount').textContent = ordersData.length;
+            document.getElementById('saveTotalCommission').textContent = formatCurrency(totalCommission);
+            document.getElementById('saveFileName').value = `Orders_${new Date().toISOString().split('T')[0]}`;
+            document.getElementById('saveModal').style.display = 'block';
+        }
+
+        function saveDataWithName() {
+            const fileName = document.getElementById('saveFileName').value.trim();
+            if (!fileName) {
+                showNotification('Please enter a file name', 'error');
+                return;
+            }
+            try {
+                const saveData = {
+                    fileName: fileName,
+                    data: ordersData,
+                    saveDate: new Date().toISOString(),
+                    orderCount: ordersData.length,
+                    totalCommission: ordersData.reduce((sum, order) => {
+                        const commission = getCommissionAmount(order.commisionrate);
+                        return sum + commission;
+                    }, 0)
+                };
+                localStorage.setItem(`orderFile_${fileName}`, JSON.stringify(saveData));
+                const filesList = JSON.parse(localStorage.getItem('orderFilesList') || '[]');
+                if (!filesList.includes(fileName)) {
+                    filesList.push(fileName);
+                    localStorage.setItem('orderFilesList', JSON.stringify(filesList));
+                }
+                closeModal('saveModal');
+                showNotification(`Successfully saved "${fileName}" with ${ordersData.length} orders`, 'success');
+            } catch (error) {
+                showNotification('Error saving data to local storage', 'error');
+            }
+        }
+
+        function showLoadModal() {
+            const filesList = JSON.parse(localStorage.getItem('orderFilesList') || '[]');
+            const filesListContainer = document.getElementById('filesList');
+            
+            if (filesList.length === 0) {
+                filesListContainer.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 40px;">
+                        <h3>No saved files found</h3>
+                        <p>Save some order data first to see files here</p>
+                    </div>
+                `;
+            } else {
+                filesListContainer.innerHTML = filesList.map(fileName => {
+                    const fileData = JSON.parse(localStorage.getItem(`orderFile_${fileName}`) || '{}');
+                    const saveDate = new Date(fileData.saveDate).toLocaleString();
+                    return `
+                        <div class="file-item" onclick="selectFile('${fileName}')">
+                            <div class="file-name">📄 ${fileName}</div>
+                            <div class="file-details">
+                                <div class="file-stats">
+                                    <span>📊 ${fileData.orderCount || 0} orders</span>
+                                    <span>💰 ${formatCurrency(fileData.totalCommission || 0)}</span>
+                                    <span>📅 ${saveDate}</span>
+                                </div>
+                                <div class="file-actions">
+                                    <button class="file-action-btn" onclick="event.stopPropagation(); loadFile('${fileName}')" title="Load">
+                                        📁 Load
+                                    </button>
+                                    <button class="file-action-btn delete" onclick="event.stopPropagation(); deleteFile('${fileName}')" title="Delete">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            document.getElementById('loadModal').style.display = 'block';
+        }
+
+        function selectFile(fileName) {
+            document.querySelectorAll('.file-item').forEach(item => item.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+
+        function loadFile(fileName) {
+            try {
+                const fileData = JSON.parse(localStorage.getItem(`orderFile_${fileName}`) || '{}');
+                if (!fileData.data || !Array.isArray(fileData.data)) {
+                    throw new Error('Invalid file data');
+                }
+                ordersData = fileData.data;
+                filteredOrders = [];
+                resetFilters();
+                renderOrders();
+                closeModal('loadModal');
+                showNotification(`Loaded "${fileName}" with ${ordersData.length} orders`, 'success');
+                setTimeout(() => {
+                    const cards = document.querySelectorAll('.order-card, .stat-card');
+                    cards.forEach((card, index) => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            card.style.transition = 'all 0.6s ease';
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }, index * 50);
+                    });
+                }, 100);
+            } catch (error) {
+                showNotification(`Error loading file "${fileName}"`, 'error');
+            }
+        }
+
+        function deleteFile(fileName) {
+            if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
+                localStorage.removeItem(`orderFile_${fileName}`);
+                const filesList = JSON.parse(localStorage.getItem('orderFilesList') || '[]');
+                const updatedList = filesList.filter(name => name !== fileName);
+                localStorage.setItem('orderFilesList', JSON.stringify(updatedList));
+                showNotification(`Deleted "${fileName}"`, 'info');
+                showLoadModal();
+            }
+        }
+
+        function clearAllSavedFiles() {
+            if (confirm('Are you sure you want to delete ALL saved files? This cannot be undone.')) {
+                const filesList = JSON.parse(localStorage.getItem('orderFilesList') || '[]');
+                filesList.forEach(fileName => {
+                    localStorage.removeItem(`orderFile_${fileName}`);
+                });
+                localStorage.removeItem('orderFilesList');
+                showNotification('All saved files deleted', 'info');
+                showLoadModal();
+            }
+        }
+
+        function showDataInput() {
+            document.getElementById('dataModal').style.display = 'block';
+            document.getElementById('orderDataInput').focus();
+        }
+
+        function closeModal(modalId) {
+            if (modalId) {
+                document.getElementById(modalId).style.display = 'none';
+            } else {
+                document.getElementById('dataModal').style.display = 'none';
+                document.getElementById('saveModal').style.display = 'none';
+                document.getElementById('loadModal').style.display = 'none';
+                document.getElementById('apiModal').style.display = 'none';
+            }
+            document.getElementById('orderDataInput').value = '';
+            if (document.getElementById('saveFileName')) {
+                document.getElementById('saveFileName').value = '';
+            }
+            const apiStatus = document.getElementById('apiStatus');
+            if (apiStatus) {
+                apiStatus.style.display = 'none';
+                apiStatus.innerHTML = '';
+            }
+        }
+
+        function loadOrderData() {
+            const inputData = document.getElementById('orderDataInput').value.trim();
+            if (!inputData) {
+                showNotification('Please paste your order data', 'error');
+                return;
+            }
+            try {
+                const parsedData = JSON.parse(inputData);
+                if (!Array.isArray(parsedData)) {
+                    throw new Error('Data should be an array of orders');
+                }
+                ordersData = parsedData;
+                filteredOrders = [];
+                resetFilters();
+                renderOrders();
+                closeModal('dataModal');
+                showNotification(`Successfully loaded ${ordersData.length} orders`, 'success');
+                setTimeout(() => {
+                    const cards = document.querySelectorAll('.order-card');
+                    cards.forEach((card, index) => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            card.style.transition = 'all 0.6s ease';
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }, index * 100);
+                    });
+                }, 100);
+            } catch (error) {
+                showNotification(`Error parsing data: ${error.message}`, 'error');
+            }
+        }
+
+        function clearData() {
+            if (confirm('Are you sure you want to clear all data? This will remove both current and saved data.')) {
+                ordersData = [];
+                localStorage.removeItem('ordersData');
+                localStorage.removeItem('ordersSaveDate');
+                renderOrders();
+                showNotification('All data cleared', 'info');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notif => notif.remove());
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderOrders();
+        });
+
+        window.onclick = function(event) {
+            const dataModal = document.getElementById('dataModal');
+            const saveModal = document.getElementById('saveModal');
+            const loadModal = document.getElementById('loadModal');
+            const apiModal = document.getElementById('apiModal');
+            if (event.target === dataModal) closeModal('dataModal');
+            else if (event.target === saveModal) closeModal('saveModal');
+            else if (event.target === loadModal) closeModal('loadModal');
+            else if (event.target === apiModal) closeModal('apiModal');
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
