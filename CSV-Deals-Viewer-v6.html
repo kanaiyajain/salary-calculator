@@ -6,262 +6,255 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSV Deal Viewer</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        /* --- ORIGINAL STYLING RESTORED --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             background: linear-gradient(135deg, #9599a7 0%, #383739 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
-            padding-top: 80px; /* Space for fixed header */
+            padding-bottom: 50px;
         }
-
-        /* --- Compact Header Styles --- */
-        .controls-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+        h1 { color: #333; font-weight: 700; font-size: 1.5rem; margin: 0; white-space: nowrap; }
+        
+        /* Compact Control Panel */
+        .control-panel {
             background: white;
+            padding: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 1rem;
+            position: sticky;
+            top: 0;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #ddd;
         }
 
-        .header-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .app-title { font-size: 1.1rem; font-weight: 700; color: #333; margin: 0; white-space: nowrap; }
+        .filter-label { font-size: 0.7rem; font-weight: 700; color: #555; margin-bottom: 2px; display: block; }
         
-        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; }
-        .btn-upload {
-            border: 2px solid #e0e0e0;
-            color: #555;
-            background-color: white;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
+        .form-control-sm { 
+            height: 30px; 
+            font-size: 0.8rem; 
+            border: 1px solid #ced4da;
         }
-        .upload-btn-wrapper input[type=file] {
-            font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer;
-        }
+        .form-control-sm:focus { border-color: #667eea; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1); }
 
-        .search-container { flex-grow: 1; min-width: 200px; }
-        .compact-input { height: 34px; font-size: 0.85rem; border-radius: 6px; }
-
-        .btn-filter-toggle {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            height: 34px;
-            padding: 0 15px;
-            font-size: 0.85rem;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-        .btn-filter-toggle:hover { color: white; opacity: 0.9; }
-
-        /* --- Collapsible Filter Panel --- */
-        #filterPanel {
-            background: #f8f9fa;
-            border-top: 1px solid #ddd;
-            margin: 0.5rem -1rem -0.5rem -1rem;
-            padding: 1rem;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
-            max-height: 80vh;
-            overflow-y: auto;
-        }
+        /* Original Buttons */
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; font-weight: 600; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
         
-        .filter-group-label { font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block; }
-        .filter-input { 
-            font-size: 0.8rem; height: 30px; padding: 2px 8px; 
-            border: 1px solid #ced4da; border-radius: 4px;
+        .btn-success { 
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none; font-weight: 600; font-size: 0.8rem; height: 30px; line-height: 1;
         }
+        .btn-success:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4); }
 
-        /* --- Existing Card Styles (Unchanged mostly) --- */
+        /* Original Card Styling */
         .card { 
-            border-radius: 8px; border: none; transition: all 0.3s ease; overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); background: white;
+            padding: 0.4rem; 
+            border-radius: 8px; 
+            border: none;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            background: white;
+            height: 100%;
         }
         .card:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(102, 126, 234, 0.2); }
-        .card-img-top { max-height: 100px; width: 100%; object-fit: contain; background: #ffffff; margin-top: 10px;}
-        .card-body { padding: 0.5rem; }
-        .card-title { font-size: 0.85rem; font-weight: 600; color: #333; height: 2.4em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 0.3rem;}
         
-        .card-info { font-size: 0.7rem; color: #666; display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; height: 22px; overflow: hidden;}
-        .card-info span { background: #f0f0f0; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
-
-        .price-section { padding: 4px 0; }
+        .card-img-top { 
+            max-height: 120px; 
+            width: 100%; 
+            object-fit: contain; 
+            background: #ffffff;
+            border-radius: 6px;
+            margin-bottom: 5px;
+        }
+        
+        .card-body { padding: 0.2rem; display: flex; flex-direction: column; }
+        
+        .card-title { 
+            font-size: 0.85rem; 
+            min-height: 2.4em; 
+            font-weight: 600; 
+            color: #333;
+            line-height: 1.2;
+            margin-bottom: 0.3rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .card-info { 
+            font-size: 0.75rem; color: #666; margin-bottom: 0.4rem;
+            display: flex; flex-wrap: wrap; gap: 0.3rem;
+        }
+        .card-info span { background: #f0f0f0; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;}
+        
+        .price-section { 
+            background: #fafafa; padding: 0.25rem; border-radius: 6px; margin: 0.3rem 0; flex-grow: 1;
+        }
+        
         .price-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 2px; }
         
-        .highlight-highest { color: #d9534f; }
-        .highlight-lowest { color: #5cb85c; }
-        .highlight-average { color: #0275d8; }
-        
-        .main-price-row {
-            display: flex; align-items: center; margin-top: 5px; padding-top: 5px; border-top: 1px solid #eee;
-        }
-        .current-price { font-size: 1.1rem; font-weight: 800; color: #333; }
-        .discount-badge { 
-            font-size: 0.75rem; font-weight: bold; color: white; 
+        /* Original Highlight Colors */
+        .highlight-highest { color: #d9534f; font-weight: bold; }
+        .highlight-lowest { color: #5cb85c; font-weight: bold; }
+        .highlight-average { color: #0275d8; font-weight: bold; }
+        .highlight-discount { 
+            color: #fff; 
             background: linear-gradient(135deg, #f0ad4e 0%, #ff8c42 100%);
-            padding: 2px 8px; border-radius: 10px; margin-left: auto;
+            padding: 0.1rem 0.5rem; border-radius: 4px; font-weight: bold; font-size: 0.75rem;
         }
-
-        .action-buttons { display: flex; gap: 5px; margin-top: 8px; }
-        .btn-buy { flex: 1; background: #667eea; color: white; border: none; font-size: 0.75rem; padding: 4px; border-radius: 4px; }
-        .btn-copy { background: white; border: 1px solid #ddd; color: #555; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; width: 50px;}
-        .btn-buy:hover { background: #5a6fd6; color: white; text-decoration: none;}
-        .btn-copy:hover { background: #f8f9fa; }
-
-        #hiddenCountDisplay { 
-            position: fixed; bottom: 20px; right: 20px; z-index: 900;
-            background: rgba(0,0,0,0.8); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem;
+        .highlight-price { 
+            color: #dbdada; 
+            background: linear-gradient(135deg, #070914 0%, #232323 100%);
+            padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: bold;
         }
+        .highlight-mrp { color: #888; text-decoration: line-through; }
+
+        .action-buttons { display: flex; gap: 0.3rem; margin-top: 0.4rem; }
         
-        .pagination-container { display: flex; justify-content: center; gap: 5px; margin: 20px 0; }
-        .page-btn { 
-            background: white; border: 1px solid #ddd; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.9rem;
+        .btn-buy-wide { 
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none; color: white; font-weight: 600; border-radius: 6px;
+            padding: 0.2rem 0.4rem; font-size: 0.75rem;
         }
-        .page-btn.active { background: #667eea; color: white; border-color: #667eea; }
+        .btn-buy-wide:hover { transform: translateY(-1px); color: white; text-decoration: none; box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3); }
+        
+        .copy-btn { 
+            background: white; border: 1px solid #e0e0e0; border-radius: 6px;
+            color: #667eea; font-weight: 600; font-size: 0.75rem; padding: 0.2rem 0.5rem;
+            min-width: 50px;
+        }
+        .copy-btn:hover { background: #f0f0f0; border-color: #667eea; }
 
-        @media (max-width: 768px) {
-            .controls-header { padding: 0.5rem; }
-            .app-title { display: none; } /* Hide title on mobile to save space */
-            .header-row { gap: 5px; }
-            .search-container { order: 3; width: 100%; min-width: 100%; margin-top: 5px;}
-            .filter-col { margin-bottom: 10px; }
-            body { padding-top: 110px; }
+        /* Pagination */
+        .pagination-container { margin: 1rem 0; display: flex; justify-content: center; }
+        .page-link { color: #667eea; border-radius: 4px; margin: 0 2px; font-weight: 600; }
+        .page-item.active .page-link { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-color: transparent; }
+        
+        #hiddenCountDisplay { 
+            font-weight: 700; font-size: 0.85rem; background: #fff3cd; color: #856404;
+            padding: 0.4rem 1rem; border-radius: 6px; display: inline-block; margin-bottom: 1rem;
         }
+
+        /* Custom narrow columns for the top bar */
+        .col-compact { padding-left: 5px; padding-right: 5px; }
+        .row-compact { margin-left: -5px; margin-right: -5px; }
     </style>
 </head>
 
 <body>
 
-    <div class="controls-header">
-        <div class="header-row">
-            <h1 class="app-title"><i class="fas fa-tags text-primary"></i> Deal Viewer</h1>
-            
-            <div class="upload-btn-wrapper">
-                <button class="btn-upload"><i class="fas fa-file-upload"></i> Upload CSV</button>
-                <input type="file" id="csvFile" accept=".csv">
-            </div>
-
-            <div class="search-container">
-                <div class="input-group">
-                    <input type="text" id="searchInput" class="form-control compact-input" placeholder="Search name, code...">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-secondary compact-input" id="clearSearch" type="button" style="padding: 0 10px;">&times;</button>
+    <div class="control-panel">
+        <div class="container-fluid">
+            <div class="row row-compact align-items-center mb-2">
+                <div class="col-auto col-compact">
+                    <h1>🎯 Deals</h1>
+                </div>
+                <div class="col-auto col-compact">
+                    <input type="file" id="csvFile" accept=".csv" class="form-control-file" style="font-size: 0.8rem; width: 180px;">
+                </div>
+                <div class="col col-compact">
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search Name, Code...">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" id="clearSearch" type="button">X</button>
+                        </div>
                     </div>
+                </div>
+                <div class="col-auto col-compact">
+                    <button class="btn btn-success" id="applyFilters">✓ Apply</button>
                 </div>
             </div>
 
-            <select id="sortSelect" class="form-control compact-input" style="width: auto; max-width: 160px;">
-                <option value="default">Sort: Default</option>
-                <option value="discount-desc">Discount (High-Low)</option>
-                <option value="discount-asc">Discount (Low-High)</option>
-                <option value="price-asc">Price (Low-High)</option>
-                <option value="price-desc">Price (High-Low)</option>
-                <option value="avg-price-diff-desc">Best Value (Avg-Price)</option>
-                <option value="date-desc">Date (Newest)</option>
-                <option value="name-asc">Name (A-Z)</option>
-            </select>
-
-            <button class="btn btn-filter-toggle" type="button" data-toggle="collapse" data-target="#filterPanel">
-                <i class="fas fa-filter"></i> Options
-            </button>
-        </div>
-
-        <div id="filterPanel" class="collapse">
-            <div class="row">
-                <div class="col-6 col-md-2 filter-col">
-                    <label class="filter-group-label">Price (₹)</label>
-                    <div class="d-flex gap-1">
-                        <input type="number" id="minPrice" class="form-control filter-input" placeholder="Min">
-                        <input type="number" id="maxPrice" class="form-control filter-input" placeholder="Max">
+            <div class="row row-compact mb-2">
+                <div class="col-6 col-md-2 col-compact">
+                    <span class="filter-label">Price ₹</span>
+                    <div class="d-flex">
+                        <input type="number" id="minPrice" class="form-control form-control-sm mr-1" placeholder="Min">
+                        <input type="number" id="maxPrice" class="form-control form-control-sm" placeholder="Max">
                     </div>
                 </div>
-
-                <div class="col-6 col-md-2 filter-col">
-                    <label class="filter-group-label">MRP (₹)</label>
-                    <div class="d-flex gap-1">
-                        <input type="number" id="minMRP" class="form-control filter-input" placeholder="Min">
-                        <input type="number" id="maxMRP" class="form-control filter-input" placeholder="Max">
+                <div class="col-6 col-md-2 col-compact">
+                    <span class="filter-label">MRP ₹</span>
+                    <div class="d-flex">
+                        <input type="number" id="minMRP" class="form-control form-control-sm mr-1" placeholder="Min">
+                        <input type="number" id="maxMRP" class="form-control form-control-sm" placeholder="Max">
                     </div>
                 </div>
-
-                <div class="col-6 col-md-2 filter-col">
-                    <label class="filter-group-label">Discount (%)</label>
-                    <div class="d-flex gap-1">
-                        <input type="number" id="minDiscount" class="form-control filter-input" placeholder="Min %">
-                        <input type="number" id="maxDiscount" class="form-control filter-input" placeholder="Max %">
+                <div class="col-6 col-md-2 col-compact">
+                    <span class="filter-label">Discount %</span>
+                    <div class="d-flex">
+                        <input type="number" id="minDiscount" class="form-control form-control-sm mr-1" placeholder="Min">
+                        <input type="number" id="maxDiscount" class="form-control form-control-sm" placeholder="Max">
                     </div>
                 </div>
-
-                <div class="col-6 col-md-2 filter-col">
-                    <label class="filter-group-label">Store</label>
-                    <select id="storeSelect" class="form-control filter-input">
-                        <option value="">All Stores</option>
+                 <div class="col-6 col-md-2 col-compact">
+                    <span class="filter-label">Sort By</span>
+                    <select id="sortSelect" class="form-control form-control-sm">
+                        <option value="default">Default</option>
+                        <option value="discount-desc">Discount (High)</option>
+                        <option value="discount-asc">Discount (Low)</option>
+                        <option value="price-asc">Price (Low)</option>
+                        <option value="price-desc">Price (High)</option>
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="date-desc">Date (New)</option>
+                        <option value="avg-price-diff-desc">Best Value</option>
                     </select>
                 </div>
-                 <div class="col-6 col-md-2 filter-col">
-                    <label class="filter-group-label">Seller</label>
-                    <select id="sellerNameSelect" class="form-control filter-input">
-                        <option value="">All Sellers</option>
-                    </select>
-                </div>
-
-                <div class="col-12 col-md-2 filter-col">
-                    <label class="filter-group-label">Negative Keywords</label>
-                    <input type="text" id="negativeKeywords" class="form-control filter-input" placeholder="exclude1, exclude2">
+                 <div class="col-12 col-md-4 col-compact">
+                    <span class="filter-label">Negative Keywords</span>
+                    <input type="text" id="negativeKeywords" class="form-control form-control-sm" placeholder="Ex: refurbished, case, cover">
                 </div>
             </div>
-            
-            <div class="row mt-2">
-                 <div class="col-12 col-md-4">
-                    <div class="d-flex align-items-center">
-                        <span class="filter-group-label mr-2">Date:</span>
-                        <input type="date" id="dateMin" class="form-control filter-input mr-1" style="width: auto;">
-                        <span class="small">-</span>
-                        <input type="date" id="dateMax" class="form-control filter-input ml-1" style="width: auto;">
+
+            <div class="row row-compact">
+                <div class="col-4 col-md-2 col-compact">
+                    <span class="filter-label">Store</span>
+                    <select id="storeSelect" class="form-control form-control-sm"><option value="">All</option></select>
+                </div>
+                <div class="col-8 col-md-3 col-compact">
+                    <span class="filter-label">Seller</span>
+                    <div class="d-flex">
+                        <input type="text" id="sellerSearchInput" class="form-control form-control-sm mr-1" placeholder="Find..." style="width: 35%;">
+                        <select id="sellerNameSelect" class="form-control form-control-sm" style="width: 65%;"><option value="">All</option></select>
                     </div>
-                 </div>
-                 <div class="col-12 col-md-8 text-right">
-                    <button class="btn btn-sm btn-success px-4" id="applyFilters" style="height: 30px; line-height: 1;">Apply Filters</button>
-                 </div>
+                </div>
+                <div class="col-12 col-md-3 col-compact">
+                     <span class="filter-label">Date Range</span>
+                     <div class="d-flex align-items-center">
+                        <input type="date" id="dateMin" class="form-control form-control-sm p-0">
+                        <span class="mx-1 text-muted">-</span>
+                        <input type="date" id="dateMax" class="form-control form-control-sm p-0">
+                     </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="container-fluid px-3 px-md-5">
+    <div class="container-fluid px-4">
         
-        <div id="hiddenCountDisplay" style="display:none;"></div>
+        <div id="hiddenCountDisplay" class="text-center" style="display:none;"></div>
 
-        <div id="paginationTop" class="pagination-container d-none"></div>
+        <nav id="paginationTop" class="pagination-container d-none"><ul class="pagination pagination-sm justify-content-center m-0"></ul></nav>
+        
+        <div id="cardContainer" class="row"></div>
 
-        <div id="cardContainer" class="row">
-            <div class="col-12 text-center text-white mt-5">
-                <h3><i class="fas fa-arrow-up"></i> Upload a CSV to begin</h3>
+        <nav id="paginationBottom" class="pagination-container d-none mt-4"><ul class="pagination pagination-sm justify-content-center"></ul></nav>
+        
+        <div id="pageJumpBottom" class="d-flex justify-content-center mt-2 mb-5 d-none">
+            <div class="input-group input-group-sm" style="width: 150px;">
+                <input type="number" class="form-control" id="jumpInput" placeholder="Page #">
+                <div class="input-group-append">
+                    <button class="btn btn-secondary" id="jumpBtn">Go</button>
+                </div>
             </div>
         </div>
-
-        <div id="paginationBottom" class="pagination-container d-none"></div>
-        
-        <div id="pageJumpSection" class="text-center mb-5 d-none">
-            <input type="number" id="jumpInput" placeholder="#" style="width: 50px; text-align: center; border-radius: 4px; border: 1px solid #ccc;">
-            <button id="jumpBtn" class="btn btn-sm btn-light">Go</button>
-        </div>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         let allData = [];
@@ -272,6 +265,7 @@
 
         function optimizeImageUrl(url) {
             if(!url) return '';
+            // Optimize Amazon and Flipkart image URLs for performance
             url = url.replace(/flixcart\.com\/image\/\d+\/\d+\//g, 'flixcart.com/image/250/250/');
             url = url.replace(/(\/images\/I\/[^.]+)\.jpg/g, '$1._SS250_FMwebp_.jpg');
             return url;
@@ -301,14 +295,14 @@
             const hiddenDisplay = document.getElementById('hiddenCountDisplay');
             
             if(hiddenByNegativeCount > 0) {
-                hiddenDisplay.style.display = 'block';
-                hiddenDisplay.textContent = `Hidden by keywords: ${hiddenByNegativeCount}`;
+                hiddenDisplay.style.display = 'inline-block';
+                hiddenDisplay.textContent = `Hidden by negative keywords: ${hiddenByNegativeCount}`;
             } else {
                 hiddenDisplay.style.display = 'none';
             }
 
             if (!data.length) {
-                container.innerHTML = '<div class="text-center text-white col-12 mt-4">No results found matching your filters.</div>';
+                container.innerHTML = '<div class="text-center text-white col-12 mt-5"><h4>No results found.</h4></div>';
                 togglePaginationUI(false);
                 return;
             }
@@ -318,12 +312,13 @@
             const end = Math.min(start + pageSize, data.length);
             const pageData = data.slice(start, end);
 
-            container.innerHTML = pageData.map((row, idx) => {
+            // col-lg-3 = 4 cards per row
+            container.innerHTML = pageData.map((row) => {
                 let buyUrl = '';
                 let storeName = row.Store;
                 
-                if (row.Store === '1') { buyUrl = `https://www.amazon.in/pricehistory_app/dp/${row.Code}`; storeName = 'Amazon'; } 
-                else if (row.Store === '2') { buyUrl = `https://www.flipkart.com/pricehistory_app-dealsspy/p/b?pid=${row.Code}`; storeName = 'Flipkart'; } 
+                if (row.Store === '1') { buyUrl = `https://www.amazon.in/pricehistory_app/dp/${row.Code}`; storeName = 'Amazon'; }
+                else if (row.Store === '2') { buyUrl = `https://www.flipkart.com/pricehistory_app-dealsspy/p/b?pid=${row.Code}`; storeName = 'Flipkart'; }
                 else if (row.Store === '4') { buyUrl = `https://www.amazon.com/pricehistory_app/dp/${row.Code}`; storeName = 'Amazon US'; }
 
                 let highest = parseInt(row.Highest) || 0;
@@ -331,94 +326,90 @@
                 let average = parseInt(row.Average) || 0;
                 let price = parseInt(row.Price) || 0;
                 let mrp = parseInt(row.MRP) || 0;
-                let sellerName = row.SellerName || (row.SellerId ? 'Seller ' + row.SellerId : 'Unknown');
+                let diff = average > 0 && price > 0 ? (average - price) : 0;
+                let sellerName = row.SellerName || (row.SellerId ? 'Seller ' + row.SellerId : '-');
                 let discount = parseFloat(row.Discount) || 0;
-                let displayDiscount = discount > 0 ? `${discount}%` : '';
+                let discDisplay = discount > 0 ? discount + '%' : '';
 
                 return `
-            <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3 px-2">
+            <div class="col-6 col-sm-6 col-lg-3 mb-3 px-2">
                 <div class="card h-100">
-                    <img class="card-img-top" src="${optimizeImageUrl(row.Image)}" alt="img" loading="lazy">
-                    <div class="card-body d-flex flex-column">
-                        <div class="card-title" title="${row.Name}">${row.Name}</div>
+                    <img class="card-img-top" src="${optimizeImageUrl(row.Image)}" alt="Img" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title" title="${row.Name}">${row.Name}</h5>
                         <div class="card-info">
                             <span title="Store">${storeName}</span>
-                            <span title="Seller">${sellerName.substring(0,15)}</span>
+                            <span title="Seller">${sellerName.substring(0,12)}</span>
+                            <span title="Date">${row.AddedOn ? row.AddedOn.split(' ')[0] : ''}</span>
                         </div>
-                        
-                        <div class="price-section flex-grow-1">
+                        <div class="price-section">
                             <div class="price-row">
-                                <span class="text-muted">High: ₹${highest}</span>
-                                <span class="text-muted">Low: ₹${lowest}</span>
+                                <span class="text-muted">High: <span class="highlight-highest">₹${highest}</span></span>
+                                <span class="text-muted">Low: <span class="highlight-lowest">₹${lowest}</span></span>
                             </div>
                             <div class="price-row">
-                                <span class="text-muted">Avg: ₹${average}</span>
-                                <span class="text-muted">MRP: ₹${mrp}</span>
+                                <span class="text-muted">Avg: <span class="highlight-average">₹${average}</span></span>
+                                <span class="highlight-mrp">MRP: ₹${mrp}</span>
                             </div>
-                            <div class="main-price-row">
-                                <span class="current-price">₹${price}</span>
-                                ${displayDiscount ? `<span class="discount-badge">${displayDiscount}</span>` : ''}
+                            <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top">
+                                <span class="highlight-price" style="font-size: 1.1rem;">₹${price}</span>
+                                ${discDisplay ? `<span class="highlight-discount">${discDisplay} OFF</span>` : ''}
                             </div>
                         </div>
-                        
                         <div class="action-buttons">
-                            ${buyUrl ? `<a href="${buyUrl}" target="_blank" class="btn btn-buy">Buy</a>` : ''}
-                            <button class="btn btn-copy" data-url="${buyUrl}">Copy</button>
+                            ${buyUrl ? `<a href="${buyUrl}" target="_blank" class="btn btn-buy-wide">🛒 Buy</a>` : ''}
+                            <button class="btn copy-btn" data-url="${buyUrl}">📋</button>
                         </div>
                     </div>
                 </div>
             </div>`;
             }).join('');
 
-            updatePagination(data.length, page);
+            renderPagination('paginationTop', data.length, page);
+            renderPagination('paginationBottom', data.length, page);
             attachCopyEvents();
         }
 
         function togglePaginationUI(show) {
-            const display = show ? 'flex' : 'none';
-            document.getElementById('paginationTop').style.display = display;
-            document.getElementById('paginationBottom').style.display = display;
-            document.getElementById('pageJumpSection').classList.toggle('d-none', !show);
+            const els = ['paginationTop', 'paginationBottom', 'pageJumpBottom'];
+            els.forEach(id => {
+                const el = document.getElementById(id);
+                if(show) { el.classList.remove('d-none'); el.classList.add('d-flex'); }
+                else { el.classList.add('d-none'); el.classList.remove('d-flex'); }
+            });
         }
 
-        function updatePagination(total, page) {
+        function renderPagination(containerId, total, page) {
+            const nav = document.getElementById(containerId);
+            const ul = nav.querySelector('ul');
             const pageCount = Math.ceil(total / pageSize);
-            const generateHTML = () => {
-                let html = '';
-                if(page > 1) html += `<div class="page-btn" onclick="goToPage(${page-1})">«</div>`;
-                
-                let start = Math.max(1, page - 2);
-                let end = Math.min(pageCount, page + 2);
-                
-                for(let i=start; i<=end; i++) {
-                    html += `<div class="page-btn ${i===page?'active':''}" onclick="goToPage(${i})">${i}</div>`;
-                }
-                
-                if(page < pageCount) html += `<div class="page-btn" onclick="goToPage(${page+1})">»</div>`;
-                return html;
-            };
+            ul.innerHTML = '';
             
-            document.getElementById('paginationTop').innerHTML = generateHTML();
-            document.getElementById('paginationBottom').innerHTML = generateHTML();
-        }
+            const add = (p, txt, active=false, disabled=false) => {
+                const li = document.createElement('li');
+                li.className = `page-item ${active?'active':''} ${disabled?'disabled':''}`;
+                li.innerHTML = `<a class="page-link" href="#">${txt}</a>`;
+                if(!disabled && !active) li.onclick = (e) => { e.preventDefault(); currentPage = p; renderCardsPage(filteredData, p); window.scrollTo(0,0); };
+                ul.appendChild(li);
+            };
 
-        window.goToPage = function(p) {
-            currentPage = p;
-            renderCardsPage(filteredData, p);
-            window.scrollTo(0,0);
+            if(page > 1) add(page-1, '«');
+            let start = Math.max(1, page - 2);
+            let end = Math.min(pageCount, page + 2);
+            for(let i=start; i<=end; i++) add(i, i, i===page);
+            if(page < pageCount) add(page+1, '»');
         }
 
         function getFilteredAndSearchedData() {
             let data = [...allData];
             
-            // Get Values
+            // Read Inputs
             const minP = parseFloat(document.getElementById('minPrice').value);
             const maxP = parseFloat(document.getElementById('maxPrice').value);
             const minM = parseFloat(document.getElementById('minMRP').value);
             const maxM = parseFloat(document.getElementById('maxMRP').value);
-            const minD = parseFloat(document.getElementById('minDiscount').value); // NEW
-            const maxD = parseFloat(document.getElementById('maxDiscount').value); // NEW
-            
+            const minD = parseFloat(document.getElementById('minDiscount').value);
+            const maxD = parseFloat(document.getElementById('maxDiscount').value);
             const store = document.getElementById('storeSelect').value;
             const seller = document.getElementById('sellerNameSelect').value;
             const search = document.getElementById('searchInput').value.toLowerCase();
@@ -431,12 +422,11 @@
             if (!isNaN(maxP)) data = data.filter(r => parseFloat(r.Price) <= maxP);
             if (!isNaN(minM)) data = data.filter(r => parseFloat(r.MRP) >= minM);
             if (!isNaN(maxM)) data = data.filter(r => parseFloat(r.MRP) <= maxM);
-            if (!isNaN(minD)) data = data.filter(r => parseFloat(r.Discount) >= minD); // NEW
-            if (!isNaN(maxD)) data = data.filter(r => parseFloat(r.Discount) <= maxD); // NEW
-            
+            if (!isNaN(minD)) data = data.filter(r => parseFloat(r.Discount) >= minD);
+            if (!isNaN(maxD)) data = data.filter(r => parseFloat(r.Discount) <= maxD);
+
             if (store) data = data.filter(r => r.Store === store);
             if (seller) data = data.filter(r => (r.SellerName || (r.SellerId ? 'Seller ' + r.SellerId : '')) === seller);
-            
             if (dateMin) data = data.filter(r => r.AddedOn && new Date(r.AddedOn) >= dateMin);
             if (dateMax) data = data.filter(r => r.AddedOn && new Date(r.AddedOn) <= dateMax);
             
@@ -449,21 +439,18 @@
             // Sorting
             const sortVal = document.getElementById('sortSelect').value;
             data.sort((a, b) => {
-                const valA = parseFloat(a.Price) || 0;
-                const valB = parseFloat(b.Price) || 0;
-                const avgA = parseFloat(a.Average) || 0;
-                const avgB = parseFloat(b.Average) || 0;
-                const discA = parseFloat(a.Discount) || 0;
-                const discB = parseFloat(b.Discount) || 0;
-
+                const pA = parseFloat(a.Price)||0, pB = parseFloat(b.Price)||0;
+                const dA = parseFloat(a.Discount)||0, dB = parseFloat(b.Discount)||0;
+                
                 switch (sortVal) {
-                    case 'discount-desc': return discB - discA; // NEW
-                    case 'discount-asc': return discA - discB; // NEW
-                    case 'name-asc': return (a.Name || '').localeCompare(b.Name || '');
-                    case 'date-desc': return new Date(b.AddedOn || 0) - new Date(a.AddedOn || 0);
-                    case 'price-asc': return valA - valB;
-                    case 'price-desc': return valB - valA;
-                    case 'avg-price-diff-desc': return (avgB - valB) - (avgA - valA);
+                    case 'discount-desc': return dB - dA;
+                    case 'discount-asc': return dA - dB;
+                    case 'price-asc': return pA - pB;
+                    case 'price-desc': return pB - pA;
+                    case 'name-asc': return (a.Name||'').localeCompare(b.Name||'');
+                    case 'date-desc': return new Date(b.AddedOn||0) - new Date(a.AddedOn||0);
+                    case 'avg-price-diff-desc': 
+                        return ((parseFloat(b.Average)||0) - pB) - ((parseFloat(a.Average)||0) - pA);
                     default: return 0;
                 }
             });
@@ -478,62 +465,63 @@
         }
 
         function attachCopyEvents() {
-            document.querySelectorAll('.btn-copy').forEach(btn => {
+            document.querySelectorAll('.copy-btn').forEach(btn => {
                 btn.onclick = function () {
                     const url = this.getAttribute('data-url');
                     if (url) {
                         navigator.clipboard.writeText(url);
-                        const oldText = this.textContent;
+                        const old = this.textContent;
                         this.textContent = '✓';
-                        setTimeout(() => { this.textContent = oldText; }, 1200);
+                        setTimeout(() => { this.textContent = old; }, 1000);
                     }
                 };
             });
         }
 
-        // Event Listeners
         document.getElementById('csvFile').onchange = (e) => {
             const reader = new FileReader();
             reader.onload = (evt) => {
                 allData = parseCSV(evt.target.result);
-                const storeMap = { '1': 'Amazon', '2': 'Flipkart', '4': 'Amazon US' };
-                
                 // Populate Stores
+                const storeMap = { '1': 'Amazon', '2': 'Flipkart', '4': 'Amazon US' };
                 const stores = Array.from(new Set(allData.map(r => r.Store))).filter(Boolean);
-                document.getElementById('storeSelect').innerHTML = '<option value="">All Stores</option>' + 
+                document.getElementById('storeSelect').innerHTML = '<option value="">All</option>' + 
                     stores.map(s => `<option value="${s}">${storeMap[s] || s}</option>`).join('');
                 
                 // Populate Sellers
                 const sellers = Array.from(new Set(allData.map(r => r.SellerName || (r.SellerId ? 'Seller ' + r.SellerId : '')))).filter(Boolean).sort();
-                document.getElementById('sellerNameSelect').innerHTML = '<option value="">All Sellers</option>' + 
+                document.getElementById('sellerNameSelect').innerHTML = '<option value="">All</option>' + 
                     sellers.map(s => `<option value="${s}">${s}</option>`).join('');
                 
                 applyFilters();
-                // Close filter panel if open on upload
-                $('#filterPanel').collapse('hide');
             };
             reader.readAsText(e.target.files[0]);
         };
 
-        const filterInputs = ['searchInput', 'negativeKeywords', 'storeSelect', 'sellerNameSelect', 
-                            'sortSelect', 'minPrice', 'maxPrice', 'minMRP', 'maxMRP', 
-                            'minDiscount', 'maxDiscount', 'dateMin', 'dateMax'];
-        
-        filterInputs.forEach(id => {
+        // Enable live filtering on seller dropdown via text input
+        document.getElementById('sellerSearchInput').addEventListener('input', function() {
+            const term = this.value.toLowerCase();
+            const options = document.getElementById('sellerNameSelect').options;
+            for (let i = 1; i < options.length; i++) {
+                const txt = options[i].text.toLowerCase();
+                options[i].style.display = txt.includes(term) ? '' : 'none';
+            }
+        });
+
+        // Event Listeners for Filters
+        ['searchInput', 'negativeKeywords', 'storeSelect', 'sellerNameSelect', 'sortSelect', 
+         'minPrice', 'maxPrice', 'minMRP', 'maxMRP', 'minDiscount', 'maxDiscount', 'dateMin', 'dateMax']
+        .forEach(id => {
             document.getElementById(id).addEventListener('input', applyFilters);
         });
 
-        document.getElementById('clearSearch').onclick = () => { 
-            document.getElementById('searchInput').value = ''; 
-            applyFilters(); 
-        };
-
-        // Jump Button Logic
+        document.getElementById('clearSearch').onclick = () => { document.getElementById('searchInput').value = ''; applyFilters(); };
+        
         document.getElementById('jumpBtn').onclick = () => {
-             const val = parseInt(document.getElementById('jumpInput').value);
-             const maxPage = Math.ceil(filteredData.length / pageSize);
-             if(val > 0 && val <= maxPage) goToPage(val);
-        }
+            const val = parseInt(document.getElementById('jumpInput').value);
+            const max = Math.ceil(filteredData.length / pageSize);
+            if(val > 0 && val <= max) { currentPage = val; renderCardsPage(filteredData, val); window.scrollTo(0,0); }
+        };
     </script>
 </body>
 </html>
